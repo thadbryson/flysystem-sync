@@ -1,0 +1,19 @@
+{
+    "name": "thadbryson/flysystem-sync",
+    "description": "Flysystem plugin to sync directories.",
+    "minimum-stability": "dev",
+
+    "authors": [
+        {
+            "name": "Thad Bryson",
+            "email": "thadbry@gmail.com",
+            "homepage": "http://thadbryson.co"
+        }
+    ],
+
+    "require": {
+        "league/flysystem": "0.3.*",
+        "doctrine/collections": "1.*",
+        "dropbox/dropbox-sdk": "1.1.*"
+    }
+}
