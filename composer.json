@@ -1,7 +1,7 @@
 {
     "name": "thadbryson/flysystem-sync",
     "description": "Flysystem plugin to sync directories.",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
 
     "authors": [
         {
@@ -12,8 +12,6 @@
     ],
 
     "require": {
-        "league/flysystem": "0.3.*",
-        "doctrine/collections": "1.*",
-        "dropbox/dropbox-sdk": "1.1.*"
+        "league/flysystem": "@stable"
     }
 }
