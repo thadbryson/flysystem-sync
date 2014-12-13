@@ -1,6 +1,14 @@
 Flysystem Sync Plugin
 =====================
 
+Installation
+------------
+
+Use Composer:
+```
+"thadbryson/flysystem-sync": "@stable"
+```
+
 This is a plugin for the Flysystem project. https://github.com/thephpleague/flysystem
 
 It helps you sync 2 directories at a time. There are two types.
@@ -76,6 +84,7 @@ $paths = $sync->getUpdates(); // array of what paths will be updated. On both Ma
 Example Path Array
 ==================
 
+```
 array(1) {
     'create-dir/3.php' =>
         array(8) {
@@ -89,5 +98,6 @@ array(1) {
             'size' => int(26)
         }
 }
+```
 
 That's an example from a var_dump() of what a path will give you.
