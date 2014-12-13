@@ -5,13 +5,19 @@
 
     "authors": [
         {
-            "name": "Thad Bryson",
-            "email": "thadbry@gmail.com",
+            "name":     "Thad Bryson",
+            "email":    "thadbry@gmail.com",
             "homepage": "http://thadbryson.co"
         }
     ],
 
     "require": {
         "league/flysystem": "@stable"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "TCB\\Flysystem\\": "src/"
+        }
     }
 }
