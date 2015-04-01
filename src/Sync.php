@@ -71,8 +71,6 @@ class Sync
     protected function put($path)
     {
         $this->slave->put($path['path'], $this->master->read($path['path']));
-
-        // $this->slave->setVisibility($path['path'], $this->master->getVisibility($path['path']));
     }
 
     public function syncWrites()
