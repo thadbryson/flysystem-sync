@@ -101,3 +101,4 @@ array(1) {
 ```
 
 That's an example from a var_dump() of what a path will give you.
+
