@@ -103,7 +103,9 @@ class Sync
     public function syncUpdates()
     {
         foreach ($this->getUpdates() as $path) {
-            $this->put($path);
+            if ($this->master->getTimestamp($path) > $this->slave->getTimestamp($path) {
+                $this->put($path);
+            }
         }
 
         return $this;
