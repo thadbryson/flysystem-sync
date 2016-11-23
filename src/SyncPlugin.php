@@ -20,6 +20,7 @@ class SyncPlugin implements PluginInterface
     protected $master;
 
 
+
     /**
      * Set master Filesystem.
      *

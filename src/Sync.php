@@ -39,7 +39,7 @@ class Sync
      *
      * @param FilesystemInterface $master
      * @param FilesystemInterface $slave
-     * @param string $dir
+     * @param string              $dir = '/'
      */
     public function __construct(FilesystemInterface $master, FilesystemInterface $slave, $dir = '/')
     {
@@ -68,7 +68,7 @@ class Sync
     protected function put($path)
     {
         // A dir? Create it.
-        if ($path['type'] === 'dir') {
+        if ($path['dir'] === true) {
             $this->slave->createDir($path['path']);
         }
         // Otherwise create or update the file.
@@ -106,7 +106,7 @@ class Sync
                 continue;
             }
             // A dir? They're deleted a special way.
-            elseif ($path['type'] === 'dir') {
+            elseif ($path['dir'] === true) {
                 $this->slave->deleteDir($path['path']);
             }
             else {

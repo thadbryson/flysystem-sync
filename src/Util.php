@@ -137,6 +137,8 @@ class Util
 
         foreach ($filesystem->listContents($dir, $recursive = true) as $path) {
 
+            $path['dir'] = $path['type'] === 'dir';
+
             // Use filepath as key for comparison between MASTER and SLAVE.
             $paths[$path['path']] = $path;
         }
