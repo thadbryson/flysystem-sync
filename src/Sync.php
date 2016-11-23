@@ -101,8 +101,7 @@ class Sync
         foreach ($this->util->getDeletes() as $path) {
 
             // A dir delete may of deleted this path already.
-            // Must check here to prevent errors.
-            if (!$this->slave->has($path['path'])) {
+            if ($this->slave->has($path['path']) === false) {
                 continue;
             }
             // A dir? They're deleted a special way.
