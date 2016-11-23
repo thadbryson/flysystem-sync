@@ -47,7 +47,7 @@ $sync = $master->getSync($slave, '/');
 // You can also just create the Sync object without using a Plugin.
 // Again that '/' variable can be any subpath directory.
 $sync = new Sync($master, $slave, '/');
-
+```
 
 Here is how to actually sync things.
 
@@ -66,8 +66,7 @@ $sync->syncUpdates();
 
 // This will do all these things at once.
 $sync->sync();
-
----
+```
 
 And you can get what all these paths are going to be separately.
 
