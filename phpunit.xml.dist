@@ -16,4 +16,8 @@
             yui="true" highlight="true"
             lowUpperBound="50" highLowerBound="80"/>
     </logging>
+    <php>
+        <ini name="display_errors" value="On" />
+        <ini name="display_startup_errors" value="On" />
+    </php>
 </phpunit>

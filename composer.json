@@ -23,5 +23,11 @@
         "psr-4": {
             "TCB\\Flysystem\\": "src/"
         }
+    },
+
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\": "test/"
+        }
     }
 }

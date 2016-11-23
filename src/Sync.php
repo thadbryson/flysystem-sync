@@ -5,7 +5,7 @@ namespace TCB\Flysystem;
 use League\Flysystem\FilesystemInterface;
 
 /**
- * class Sync
+ * Class Sync
  *
  * @author Thad Bryson <thadbry@gmail.com>
  */
@@ -19,18 +19,19 @@ class Sync
     protected $master;
 
     /**
+     * Slave filesystem.
+     *
      * @var FilesystemInterface
      */
     protected $slave;
 
     /**
-     * Slave filesystem.
+     * Util object for getting WRITE, UPDATE, and DELETE paths.
      *
-     * Root directory to sync.
-     *
-     * @var string
+     * @var Util
      */
-    protected $dir;
+    protected $util;
+
 
 
     /**
@@ -45,76 +46,17 @@ class Sync
         $this->master = $master;
         $this->slave  = $slave;
 
-        $this->dir = $dir;
+        $this->util = new Util($master, $slave, $dir);
     }
 
     /**
-     * Get paths on Filesystem.
+     * Get Util helper object used for getting WRITE, UPDATE, and DELETE paths.
      *
-     * @param FilesystemInterface $filesystem
-     * @param $skipDirs
-     * @return array
+     * @return Util
      */
-    protected function getPaths(FilesystemInterface $filesystem, $skipDirs)
+    public function getUtil()
     {
-        $paths = [];
-
-        foreach ($filesystem->listContents($this->dir, true) as $path) {
-            if ($skipDirs && $path['type'] === 'dir') {
-                continue;
-            }
-
-            $paths[$path['path']] = $path;
-        }
-
-        ksort($paths);
-
-        return $paths;
-    }
-
-    /**
-     * Get paths to write.
-     *
-     * @return array
-     */
-    public function getWrites()
-    {
-        return array_values(
-            array_diff_key(
-                $this->getPaths($this->master, true),
-                $this->getPaths($this->slave, true)
-            )
-        );
-    }
-
-    /**
-     * Get paths to delete.
-     *
-     * @return array
-     */
-    public function getDeletes()
-    {
-        return array_values(
-            array_diff_key(
-                $this->getPaths($this->slave, false),
-                $this->getPaths($this->master, false)
-            )
-        );
-    }
-
-    /**
-     * Get paths to update.
-     *
-     * @return array
-     */
-    public function getUpdates()
-    {
-        return array_values(
-            array_intersect_key(
-                $this->getPaths($this->master, true),
-                $this->getPaths($this->slave, true)
-            )
-        );
+        return $this->util;
     }
 
     /**
@@ -125,7 +67,14 @@ class Sync
      */
     protected function put($path)
     {
-        $this->slave->put($path['path'], $this->master->read($path['path']));
+        // A dir? Create it.
+        if ($path['type'] === 'dir') {
+            $this->slave->createDir($path['path']);
+        }
+        // Otherwise create or update the file.
+        else {
+            $this->slave->putStream($path['path'], $this->master->readStream($path['path']));
+        }
     }
 
     /**
@@ -135,7 +84,7 @@ class Sync
      */
     public function syncWrites()
     {
-        foreach ($this->getWrites() as $path) {
+        foreach ($this->util->getWrites() as $path) {
             $this->put($path);
         }
 
@@ -149,12 +98,15 @@ class Sync
      */
     public function syncDeletes()
     {
-        foreach ($this->getDeletes() as $path) {
+        foreach ($this->util->getDeletes() as $path) {
+
+            // A dir delete may of deleted this path already.
+            // Must check here to prevent errors.
             if (!$this->slave->has($path['path'])) {
                 continue;
             }
-
-            if ($path['type'] === 'dir') {
+            // A dir? They're deleted a special way.
+            elseif ($path['type'] === 'dir') {
                 $this->slave->deleteDir($path['path']);
             }
             else {
@@ -172,10 +124,8 @@ class Sync
      */
     public function syncUpdates()
     {
-        foreach ($this->getUpdates() as $path) {
-            if ($this->master->getTimestamp($path) > $this->slave->getTimestamp($path)) {
-                $this->put($path);
-            }
+        foreach ($this->util->getUpdates() as $path) {
+            $this->put($path);
         }
 
         return $this;
@@ -188,12 +138,10 @@ class Sync
      */
     public function sync()
     {
-        $this
+        return $this
             ->syncWrites()
             ->syncUpdates()
             ->syncDeletes()
         ;
-
-        return $this;
     }
 }

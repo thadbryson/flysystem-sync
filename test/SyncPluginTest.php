@@ -1,17 +1,19 @@
 <?php
 
-require_once 'SyncTest.php';
+namespace Test;
 
-use TCB\Flysystem\Sync;
 use TCB\Flysystem\SyncPlugin;
 
-use TCB\FlysystemTest\SyncTest;
-
-use League\Flysystem\Filesystem;
-use League\Flysystem\Adapter\Local as Adapter;
-
-class SyncPluginTest extends \SyncTest
+/**
+ * Class SyncPluginTest
+ *
+ * @author Thad Bryson <thadbry@gmail.com>
+ */
+class SyncPluginTest extends SyncTest
 {
+    /**
+     * {@inheritdoc}
+     */
     public function setUp()
     {
         parent::setUp();
@@ -20,6 +22,11 @@ class SyncPluginTest extends \SyncTest
         $this->sync = $this->master->getSync($this->slave);
     }
 
+    /**
+     * Get Sync object from plugin object.
+     *
+     * @return void
+     */
     public function testGettingSyncFromPlugin()
     {
         $this->assertEquals('TCB\Flysystem\Sync', get_class($this->master->getSync($this->slave)));
