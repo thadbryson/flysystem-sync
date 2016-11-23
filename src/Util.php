@@ -16,21 +16,21 @@ class Util
      *
      * @var array
      */
-    protected $writes;
+    protected $writes = [];
 
     /**
      * Paths to delete (on SLAVE but not MASTER).
      *
      * @var array
      */
-    protected $deletes;
+    protected $deletes = [];
 
     /**
      * Paths to update (on SLAVE and MASTER but later timestamp on MASTER).
      *
      * @var array
      */
-    protected $updates;
+    protected $updates = [];
 
 
 
