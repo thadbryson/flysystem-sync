@@ -40,31 +40,25 @@ class Sync
 
     public function getWrites()
     {
-        return array_values(
-            array_diff_key(
-                $this->getPaths($this->master, true),
-                $this->getPaths($this->slave, true)
-            )
+        return array_diff_key(
+            $this->getPaths($this->master, true),
+            $this->getPaths($this->slave, true)
         );
     }
 
     public function getDeletes()
     {
-        return array_values(
-            array_diff_key(
-                $this->getPaths($this->slave, false),
-                $this->getPaths($this->master, false)
-            )
+        return array_diff_key(
+            $this->getPaths($this->slave, false),
+            $this->getPaths($this->master, false)
         );
     }
 
     public function getUpdates()
     {
-        return array_values(
-            array_intersect_key(
-                $this->getPaths($this->master, true),
-                $this->getPaths($this->slave, true)
-            )
+        return array_intersect_key(
+            $this->getPaths($this->master, true),
+            $this->getPaths($this->slave, true)
         );
     }
 
