@@ -70,7 +70,7 @@ class Sync
 
     protected function put($path)
     {
-        $this->slave->put($path['path'], $this->master->read($path['path']));
+        $this->slave->putStream($path['path'], $this->master->readStream($path['path']));
     }
 
     public function syncWrites()
