@@ -4,15 +4,42 @@ namespace TCB\Flysystem;
 
 use League\Flysystem\FilesystemInterface;
 
+/**
+ * class Sync
+ *
+ * @author Thad Bryson <thadbry@gmail.com>
+ */
 class Sync
 {
+    /**
+     * Master filesystem.
+     *
+     * @var FilesystemInterface
+     */
     protected $master;
+
+    /**
+     * @var FilesystemInterface
+     */
     protected $slave;
 
+    /**
+     * Slave filesystem.
+     *
+     * Root directory to sync.
+     *
+     * @var string
+     */
     protected $dir;
 
 
-
+    /**
+     * Sync constructor.
+     *
+     * @param FilesystemInterface $master
+     * @param FilesystemInterface $slave
+     * @param string $dir
+     */
     public function __construct(FilesystemInterface $master, FilesystemInterface $slave, $dir = '/')
     {
         $this->master = $master;
@@ -21,6 +48,13 @@ class Sync
         $this->dir = $dir;
     }
 
+    /**
+     * Get paths on Filesystem.
+     *
+     * @param FilesystemInterface $filesystem
+     * @param $skipDirs
+     * @return array
+     */
     protected function getPaths(FilesystemInterface $filesystem, $skipDirs)
     {
         $paths = [];
@@ -38,6 +72,11 @@ class Sync
         return $paths;
     }
 
+    /**
+     * Get paths to write.
+     *
+     * @return array
+     */
     public function getWrites()
     {
         return array_values(
@@ -48,6 +87,11 @@ class Sync
         );
     }
 
+    /**
+     * Get paths to delete.
+     *
+     * @return array
+     */
     public function getDeletes()
     {
         return array_values(
@@ -58,6 +102,11 @@ class Sync
         );
     }
 
+    /**
+     * Get paths to update.
+     *
+     * @return array
+     */
     public function getUpdates()
     {
         return array_values(
@@ -68,6 +117,12 @@ class Sync
         );
     }
 
+    /**
+     * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
+     *
+     * @param $path
+     * @return void
+     */
     protected function put($path)
     {
         $this->slave->put($path['path'], $this->master->read($path['path']));
@@ -75,6 +130,11 @@ class Sync
         $this->slave->setVisibility($path['path'], $this->master->getVisibility($path['path']));
     }
 
+    /**
+     * Sync any writes.
+     *
+     * @return $this
+     */
     public function syncWrites()
     {
         foreach ($this->getWrites() as $path) {
@@ -84,6 +144,11 @@ class Sync
         return $this;
     }
 
+    /**
+     * Sync any deletes.
+     *
+     * @return $this
+     */
     public function syncDeletes()
     {
         foreach ($this->getDeletes() as $path) {
@@ -102,6 +167,11 @@ class Sync
         return $this;
     }
 
+    /**
+     * Sync any updates.
+     *
+     * @return $this
+     */
     public function syncUpdates()
     {
         foreach ($this->getUpdates() as $path) {
@@ -111,6 +181,11 @@ class Sync
         return $this;
     }
 
+    /**
+     * Call $this->syncWrites(), $this->syncUpdates(), and $this->syncDeletes()
+     *
+     * @return $this
+     */
     public function sync()
     {
         $this
