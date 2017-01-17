@@ -15,7 +15,7 @@ It helps you sync 2 directories at a time. There are two types.
 
 Master
 ------
-Contents of this directory are moved to Slave for writing and updating. If this folder has a path that Slave doesn't then the path on Slave is deleted.
+Contents of this directory are moved to Slave for writing and updating. If Slave has a folder has a path that this doesn't then the path on Slave is deleted.
 
 Slave
 -----
