@@ -1,4 +1,6 @@
-/.idea/
+
+.idea/
+
 /vendor/
 /composer.lock
 /doc/phpunit/
