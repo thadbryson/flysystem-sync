@@ -72,11 +72,11 @@ And you can get what all these paths are going to be separately.
 
 ```php
 
-$paths = $sync->getWrites();  // array of what paths will be written. On Master but not on Slave.
+$paths = $sync->getUtil()->getWrites();  // array of what paths will be written. On Master but not on Slave.
 
-$paths = $sync->getDeletes(); // array of what paths will be deleted. On Slave but not on Master.
+$paths = $sync->getUtil()->getDeletes(); // array of what paths will be deleted. On Slave but not on Master.
 
-$paths = $sync->getUpdates(); // array of what paths will be updated. On both Master and Slave.
+$paths = $sync->getUtil()->getUpdates(); // array of what paths will be updated. On both Master and Slave.
 
 ```
 
