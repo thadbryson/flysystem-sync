@@ -2,6 +2,7 @@
     "name": "thadbryson/flysystem-sync",
     "description": "Flysystem plugin to sync directories.",
     "minimum-stability": "stable",
+    "license": "MIT",
 
     "authors": [
         {
