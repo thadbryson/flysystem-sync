@@ -1,14 +1,12 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace TCB\Flysystem;
 
+use Illuminate\Support\Collection;
 use League\Flysystem\FilesystemInterface;
 
-/**
- * Class Util
- *
- * @author Thad Bryson <thadbry@gmail.com>
- */
 class Util
 {
     /**
@@ -32,62 +30,66 @@ class Util
      */
     protected $updates = [];
 
-
-
     /**
      * Sync constructor.
      *
      * @param FilesystemInterface $master
      * @param FilesystemInterface $slave
-     * @param string $dir
+     * @param string              $dir
      */
     public function __construct(FilesystemInterface $master, FilesystemInterface $slave, $dir = '/')
     {
-        $masterPaths = $this->getPaths($master, $dir);
-        $slavePaths  = $this->getPaths($slave, $dir);
+        $masterPaths = $master->listContents($dir, true);
+        $slavePaths  = $slave->listContents($dir, true);
 
-        // Get all file paths.
-        $allPaths = array_merge(array_keys($masterPaths), array_keys($slavePaths));
+        $masterPaths = Collection::make($masterPaths)->keyBy('path')->sortKeys();
+        $slavePaths  = Collection::make($slavePaths)->keyBy('path')->sortKeys();
 
-        //  Find all WRITE, UPDATE, and DELETE paths.
-        foreach ($allPaths as $path) {
+        $masterPaths->keys()
+            ->merge($slavePaths->keys())
+            ->map(function (string $path) use ($masterPaths, $slavePaths) {
 
-            $onMaster = isset($masterPaths[$path]) === true;
-            $onSlave  = isset($slavePaths[$path])  === true;
+                return [
+                    $path,
+                    $masterPaths->has($path),
+                    $slavePaths->has($path),
+                    $masterPaths->get($path),
+                    $slavePaths->get($path)
+                ];
+            })
+            ->eachSpread(function (string $path, bool $isOnMaster, bool $isOnSlave, ?array $master, ?array $slave) {
 
-            $master = $onMaster === true ? $masterPaths[$path] : null;
-            $slave  = $onSlave  === true ? $slavePaths[$path]  : null;
+                // On both: Update if Path files are different somehow.
+                if ($isOnMaster && $isOnSlave && static::isDiff($master, $slave)) {
 
-            // On both: UPDATE?
-            if ($onMaster === true && $onSlave === true) {
-
-                // Path files are different somehow.
-                if (static::isDiff($master, $slave) === true) {
                     $this->updates[$path] = $master;
                 }
-            }
-            // Write: on Master, not Slave
-            elseif ($onMaster === true && $onSlave === false) {
+                // Write: on Master, not Slave
+                elseif ($isOnMaster && $isOnSlave === false) {
 
-                // Do not write directories: they get created with files.
-                $this->writes[$path] = $master;
-            }
-            // Delete: not on Master, on Slave
-            elseif ($onMaster === false && $onSlave === true) {
-                $this->deletes[$path] = $slave;
-            }
-        }
+                    $this->writes[$path] = $master;
+                }
+                // Delete: not on Master, on Slave
+                elseif ($isOnSlave && $isOnMaster === false) {
+
+                    $this->deletes[$path] = $slave;
+                }
+            });
     }
 
     /**
      * Should these paths be updated?
      *
-     * @param $path1
-     * @param $path2
+     * @param array|null $path1
+     * @param array|null $path2
      * @return bool
      */
-    public static function isDiff($path1, $path2)
+    public static function isDiff(?array $path1, ?array $path2): bool
     {
+        if ($path1 === null || $path2 === null) {
+            return false;
+        }
+
         $diffKeys   = array_diff_key($path1, $path2);
         $diffValues = array_diff($path1, $path2);
 
@@ -99,7 +101,7 @@ class Util
      *
      * @return array
      */
-    public function getWrites()
+    public function getWrites(): array
     {
         return $this->writes;
     }
@@ -109,7 +111,7 @@ class Util
      *
      * @return array
      */
-    public function getDeletes()
+    public function getDeletes(): array
     {
         return $this->deletes;
     }
@@ -119,33 +121,8 @@ class Util
      *
      * @return array
      */
-    public function getUpdates()
+    public function getUpdates(): array
     {
         return $this->updates;
-    }
-
-    /**
-     * Get paths on Filesystem.
-     *
-     * @param FilesystemInterface $filesystem
-     * @param string              $dir        - Dir on filesystem to search.
-     * @return array
-     */
-    protected function getPaths(FilesystemInterface $filesystem, $dir)
-    {
-        $paths = [];
-
-        foreach ($filesystem->listContents($dir, $recursive = true) as $path) {
-
-            $path['dir'] = $path['type'] === 'dir';
-
-            // Use filepath as key for comparison between MASTER and SLAVE.
-            $paths[$path['path']] = $path;
-        }
-
-        // Sort by key (filepath).
-        ksort($paths);
-
-        return $paths;
     }
 }

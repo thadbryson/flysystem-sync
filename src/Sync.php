@@ -1,14 +1,11 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace TCB\Flysystem;
 
 use League\Flysystem\FilesystemInterface;
 
-/**
- * Class Sync
- *
- * @author Thad Bryson <thadbry@gmail.com>
- */
 class Sync
 {
     /**
@@ -32,8 +29,6 @@ class Sync
      */
     protected $util;
 
-
-
     /**
      * Sync constructor.
      *
@@ -41,7 +36,7 @@ class Sync
      * @param FilesystemInterface $slave
      * @param string              $dir = '/'
      */
-    public function __construct(FilesystemInterface $master, FilesystemInterface $slave, $dir = '/')
+    public function __construct(FilesystemInterface $master, FilesystemInterface $slave, string $dir = '/')
     {
         $this->master = $master;
         $this->slave  = $slave;
@@ -54,7 +49,7 @@ class Sync
      *
      * @return Util
      */
-    public function getUtil()
+    public function getUtil(): Util
     {
         return $this->util;
     }
@@ -62,25 +57,26 @@ class Sync
     /**
      * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
      *
-     * @param $path
-     * @return void
+     * @param array $path
+     * @return bool
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    protected function put($path)
+    protected function put(array $path): bool
     {
         // A dir? Create it.
-        if ($path['dir'] === true) {
-            $this->slave->createDir($path['path']);
+        if ($path['type'] === 'dir') {
+            return $this->slave->createDir($path['path']);
         }
+
         // Otherwise create or update the file.
-        else {
-            $this->slave->putStream($path['path'], $this->master->readStream($path['path']));
-        }
+        return $this->slave->putStream($path['path'], $this->master->readStream($path['path']));
     }
 
     /**
      * Sync any writes.
      *
      * @return $this
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function syncWrites()
     {
@@ -95,6 +91,7 @@ class Sync
      * Sync any deletes.
      *
      * @return $this
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function syncDeletes()
     {
@@ -105,7 +102,7 @@ class Sync
                 continue;
             }
             // A dir? They're deleted a special way.
-            elseif ($path['dir'] === true) {
+            elseif ($path['type'] === 'dir') {
                 $this->slave->deleteDir($path['path']);
             }
             else {
@@ -120,6 +117,7 @@ class Sync
      * Sync any updates.
      *
      * @return $this
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function syncUpdates()
     {
@@ -134,13 +132,13 @@ class Sync
      * Call $this->syncWrites(), $this->syncUpdates(), and $this->syncDeletes()
      *
      * @return $this
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function sync()
     {
         return $this
             ->syncWrites()
             ->syncUpdates()
-            ->syncDeletes()
-        ;
+            ->syncDeletes();
     }
 }

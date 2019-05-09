@@ -1,22 +1,20 @@
 <?php
 
-namespace Test;
+declare(strict_types = 1);
 
-/**
- * Class SyncTest
- *
- * @author Thad Bryson <thadbry@gmail.com>
- */
-class SyncTest extends AbstractTestBase
+namespace Tests\Unit;
+
+class SyncTest extends \Codeception\Test\Unit
 {
-
+    use TestTrait;
 
     /**
      * Test Sync->syncWrites()
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function testSyncWrites()
+    public function testSyncWrites(): void
     {
         $this->sync->syncWrites();
 
@@ -39,8 +37,9 @@ class SyncTest extends AbstractTestBase
      * Test Sync->syncDeletes()
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function testSyncDeletes()
+    public function testSyncDeletes(): void
     {
         $this->sync->syncDeletes();
 
@@ -64,8 +63,9 @@ class SyncTest extends AbstractTestBase
      * Test Sync->syncUpdates()
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function testSyncUpdates()
+    public function testSyncUpdates(): void
     {
         $this->sync->syncUpdates();
 
@@ -88,8 +88,9 @@ class SyncTest extends AbstractTestBase
      * Test Sync->sync()
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function testSync()
+    public function testSync(): void
     {
         $this->sync->sync();
 

@@ -1,15 +1,13 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace TCB\Flysystem;
 
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\PluginInterface;
+use RuntimeException;
 
-/**
- * class SyncPlugin
- *
- * @author Thad Bryson <thadbry@gmail.com>
- */
 class SyncPlugin implements PluginInterface
 {
     /**
@@ -19,17 +17,17 @@ class SyncPlugin implements PluginInterface
      */
     protected $master;
 
-
-
     /**
      * Set master Filesystem.
      *
      * @param FilesystemInterface $master
-     * @return void
+     * @return $this
      */
     public function setFilesystem(FilesystemInterface $master)
     {
         $this->master = $master;
+
+        return $this;
     }
 
     /**
@@ -37,7 +35,7 @@ class SyncPlugin implements PluginInterface
      *
      * @return string
      */
-    public function getMethod()
+    public function getMethod(): string
     {
         return 'getSync';
     }
@@ -46,11 +44,18 @@ class SyncPlugin implements PluginInterface
      * Run plugin.
      *
      * @param FilesystemInterface $slave
-     * @param string $dir
+     * @param string              $dir
      * @return \TCB\Flysystem\Sync
+     * @throws RuntimeException
      */
-    public function handle(FilesystemInterface $slave, $dir = '/')
+    public function handle(FilesystemInterface $slave, string $dir = '/'): Sync
     {
+        if ($this->master === null) {
+
+            throw new RuntimeException(sprintf('Must set \$master %s directory with %s->setFilesystem(\$master)',
+                FilesystemInterface::class, static::class));
+        }
+
         return new Sync($this->master, $slave, $dir);
     }
 }
