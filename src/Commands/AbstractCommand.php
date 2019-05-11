@@ -7,7 +7,7 @@ namespace TCB\Flysystem\Commands;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class AbstractCommand extends \Illuminate\Console\Command
+abstract class AbstractCommand extends \Illuminate\Console\Command
 {
     /**
      * Run the console command.
@@ -20,7 +20,10 @@ class AbstractCommand extends \Illuminate\Console\Command
     public function run(InputInterface $input, OutputInterface $output)
     {
         try {
-            return parent::run($input, $output);
+            $result = parent::run($input, $output);
+            $this->line('');
+
+            return $result;
         }
         catch (\Exception $exception) {
 

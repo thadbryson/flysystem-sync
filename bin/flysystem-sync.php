@@ -16,5 +16,7 @@ use TCB\Flysystem\Commands;
 $app = new Application(new Container, new Dispatcher, 'v1.0');
 $app->setName('Flysystem Sync CLI');
 
-$app->add(new Commands\Project\Init);
+$app->add(new Commands\Execute);
+$app->add(new Commands\Init);
+$app->add(new Commands\Validate);
 $app->run();
