@@ -62,7 +62,7 @@ class Util
             if ($onMaster === true && $onSlave === true) {
 
                 // Path files are different somehow.
-                if (static::isDiff($master, $slave) === true) {
+                if (static::isDiff($master, $slave) === true || static::isNewer($master, $slave) === true) {
                     $this->updates[$path] = $master;
                 }
             }
@@ -88,10 +88,22 @@ class Util
      */
     public static function isDiff($path1, $path2)
     {
+        unset($path1["timestamp"]);
+        unset($path2["timestamp"]);
         $diffKeys   = array_diff_key($path1, $path2);
         $diffValues = array_diff($path1, $path2);
 
         return count($diffKeys) > 0 || count($diffValues) > 0;
+    }
+
+    /**
+     * @param $master
+     * @param $slave
+     * @return bool
+     */
+    public static function isNewer($master, $slave)
+    {
+        return $master["timestamp"] > $slave["timestamp"];
     }
 
     /**
