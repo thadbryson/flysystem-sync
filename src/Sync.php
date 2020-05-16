@@ -54,9 +54,20 @@ class Sync
      *
      * @return Util
      */
-    public function getUtil()
+    public function getUtil($path=null)
     {
         return $this->util;
+    }
+
+    public function setFolder($path='/')
+    {
+      $this->util = new Util($this->master, $this->slave, $path);
+      return $this;
+    }
+
+    public function exclude($path=null)
+    {
+      if($path) $this->excludes[] = $path;
     }
 
     /**
@@ -85,6 +96,7 @@ class Sync
     public function syncWrites()
     {
         foreach ($this->util->getWrites() as $path) {
+            echo "writing " . $path["path"] . PHP_EOL;
             $this->put($path);
         }
 
@@ -106,9 +118,11 @@ class Sync
             }
             // A dir? They're deleted a special way.
             elseif ($path['dir'] === true) {
+                echo "deleting " . $path["path"] . PHP_EOL;
                 $this->slave->deleteDir($path['path']);
             }
             else {
+                echo "deleting " . $path["path"] . PHP_EOL;
                 $this->slave->delete($path['path']);
             }
         }
@@ -124,6 +138,7 @@ class Sync
     public function syncUpdates()
     {
         foreach ($this->util->getUpdates() as $path) {
+            echo "updating " . $path["path"] . PHP_EOL;
             $this->put($path);
         }
 
@@ -135,8 +150,11 @@ class Sync
      *
      * @return $this
      */
-    public function sync()
+    public function sync($folder = null)
     {
+        if($folder) {
+          $this->setFolder($folder);
+        }
         return $this
             ->syncWrites()
             ->syncUpdates()
