@@ -95,8 +95,7 @@ class Sync
      */
     public function syncWrites()
     {
-        foreach ($this->util->getWrites() as $path) {
-            echo "writing " . $path["path"] . PHP_EOL;
+        foreach ($this->util->getWrites() as $path) {            
             $this->put($path);
         }
 
@@ -118,11 +117,9 @@ class Sync
             }
             // A dir? They're deleted a special way.
             elseif ($path['dir'] === true) {
-                echo "deleting " . $path["path"] . PHP_EOL;
                 $this->slave->deleteDir($path['path']);
             }
             else {
-                echo "deleting " . $path["path"] . PHP_EOL;
                 $this->slave->delete($path['path']);
             }
         }
@@ -138,7 +135,6 @@ class Sync
     public function syncUpdates()
     {
         foreach ($this->util->getUpdates() as $path) {
-            echo "updating " . $path["path"] . PHP_EOL;
             $this->put($path);
         }
 
