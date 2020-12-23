@@ -3,5 +3,5 @@
 
 /vendor/
 /composer.lock
-/tests/sync-test/*
+
 /.phpunit.result.cache
