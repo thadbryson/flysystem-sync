@@ -1,29 +1,34 @@
 <?php
 
-namespace TCB\Flysystem;
+declare(strict_types = 1);
 
-use League\Flysystem\FilesystemInterface;
+namespace TCB\FlysystemSync;
 
-/**
- * Class Sync
- *
- * @author Thad Bryson <thadbry@gmail.com>
- */
+use League\Flysystem\Filesystem;
+use League\Flysystem\StorageAttributes;
+
 class Sync
 {
     /**
      * Master filesystem.
      *
-     * @var FilesystemInterface
+     * @var Filesystem
      */
     protected $master;
 
     /**
      * Slave filesystem.
      *
-     * @var FilesystemInterface
+     * @var Filesystem
      */
     protected $slave;
+
+    /**
+     * Configuration for Adapter.
+     *
+     * @var array
+     */
+    protected $config;
 
     /**
      * Util object for getting WRITE, UPDATE, and DELETE paths.
@@ -32,49 +37,22 @@ class Sync
      */
     protected $util;
 
-
-
-    /**
-     * Sync constructor.
-     *
-     * @param FilesystemInterface $master
-     * @param FilesystemInterface $slave
-     * @param string              $dir = '/'
-     */
-    public function __construct(FilesystemInterface $master, FilesystemInterface $slave, $dir = '/')
+    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $dir = '/')
     {
         $this->master = $master;
         $this->slave  = $slave;
+
+        $this->config = $config;
 
         $this->util = new Util($master, $slave, $dir);
     }
 
     /**
      * Get Util helper object used for getting WRITE, UPDATE, and DELETE paths.
-     *
-     * @return Util
      */
-    public function getUtil()
+    public function getUtil(): Util
     {
         return $this->util;
-    }
-
-    /**
-     * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
-     *
-     * @param $path
-     * @return void
-     */
-    protected function put($path)
-    {
-        // A dir? Create it.
-        if ($path['dir'] === true) {
-            $this->slave->createDir($path['path']);
-        }
-        // Otherwise create or update the file.
-        else {
-            $this->slave->putStream($path['path'], $this->master->readStream($path['path']));
-        }
     }
 
     /**
@@ -86,31 +64,6 @@ class Sync
     {
         foreach ($this->util->getWrites() as $path) {
             $this->put($path);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Sync any deletes.
-     *
-     * @return $this
-     */
-    public function syncDeletes()
-    {
-        foreach ($this->util->getDeletes() as $path) {
-
-            // A dir delete may of deleted this path already.
-            if ($this->slave->has($path['path']) === false) {
-                continue;
-            }
-            // A dir? They're deleted a special way.
-            elseif ($path['dir'] === true) {
-                $this->slave->deleteDir($path['path']);
-            }
-            else {
-                $this->slave->delete($path['path']);
-            }
         }
 
         return $this;
@@ -131,6 +84,28 @@ class Sync
     }
 
     /**
+     * Sync any deletes.
+     *
+     * @return $this
+     */
+    public function syncDeletes()
+    {
+        foreach ($this->util->getDeletes() as $path) {
+
+            // A dir delete may of deleted this path already.
+            if ($path->isFile()) {
+                $this->slave->delete($path->path());
+            }
+            // A dir? They're deleted a special way.
+            elseif ($path->isDir()) {
+                $this->slave->deleteDirectory($path->path());
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * Call $this->syncWrites(), $this->syncUpdates(), and $this->syncDeletes()
      *
      * @return $this
@@ -140,7 +115,23 @@ class Sync
         return $this
             ->syncWrites()
             ->syncUpdates()
-            ->syncDeletes()
-        ;
+            ->syncDeletes();
+    }
+
+    /**
+     * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
+     */
+    protected function put(StorageAttributes $path): void
+    {
+        // Otherwise create or update the file.
+        if ($path->isFile()) {
+            $contents = $this->master->readStream($path->path());
+
+            $this->slave->writeStream($path->path(), $contents, $this->config);
+        }
+        // A dir? Create it.
+        elseif ($path->isDir()) {
+            $this->slave->createDirectory($path->path(), $this->config);
+        }
     }
 }

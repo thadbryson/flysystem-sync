@@ -3,4 +3,4 @@
 
 /vendor/
 /composer.lock
-/doc/phpunit/
+/tests/sync-test

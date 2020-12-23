@@ -1,17 +1,21 @@
 Flysystem Sync Plugin
 =====================
 
+About
+-----
+This is a wrapper for [Flysystem](https://github.com/thephpleague/flysystem) version 2 and up.
+Note that v1.* is a plugin for Flysystem v1.*.
+
 Installation
 ------------
-
 Use Composer:
 ```
-"thadbryson/flysystem-sync": "@stable"
+"thadbryson/flysystem-sync": "^2.0"
 ```
 
-This is a plugin for the Flysystem project. https://github.com/thephpleague/flysystem
+Supports PHP v7.2 and up.
 
-It helps you sync 2 directories at a time. There are two types.
+It helps you sync 2 directories at a time. There are two directory types.
 
 Master
 ------

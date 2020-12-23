@@ -1,125 +1,111 @@
 <?php
 
-namespace TCB\Flysystem;
+declare(strict_types = 1);
 
-use League\Flysystem\FilesystemInterface;
+namespace TCB\FlysystemSync;
 
-/**
- * Class Util
- *
- * @author Thad Bryson <thadbry@gmail.com>
- */
+use League\Flysystem\FileAttributes;
+use League\Flysystem\Filesystem;
+use League\Flysystem\StorageAttributes;
+
 class Util
 {
     /**
+     * Paths to update (on SLAVE and MASTER but later timestamp on MASTER).
+     *
+     * @var iterable|StorageAttributes[]
+     */
+    protected $updates = [];
+
+    /**
      * Paths to write (on MASTER but NOT SLAVE).
      *
-     * @var array
+     * @var iterable|StorageAttributes[]
      */
     protected $writes = [];
 
     /**
      * Paths to delete (on SLAVE but not MASTER).
      *
-     * @var array
+     * @var iterable|StorageAttributes[]
      */
     protected $deletes = [];
 
-    /**
-     * Paths to update (on SLAVE and MASTER but later timestamp on MASTER).
-     *
-     * @var array
-     */
-    protected $updates = [];
-
-
-
-    /**
-     * Sync constructor.
-     *
-     * @param FilesystemInterface $master
-     * @param FilesystemInterface $slave
-     * @param string $dir
-     */
-    public function __construct(FilesystemInterface $master, FilesystemInterface $slave, $dir = '/')
+    public function __construct(Filesystem $master, Filesystem $slave, string $dir = '/')
     {
-        $masterPaths = $this->getPaths($master, $dir);
-        $slavePaths  = $this->getPaths($slave, $dir);
+        $master = $this->getPaths($master, $dir);
+        $slave  = $this->getPaths($slave, $dir);
 
         // Get all file paths.
-        $allPaths = array_merge(array_keys($masterPaths), array_keys($slavePaths));
+        $all = array_merge(
+            array_keys($master),
+            array_keys($slave)
+        );
 
         //  Find all WRITE, UPDATE, and DELETE paths.
-        foreach ($allPaths as $path) {
+        foreach ($all as $path) {
+            $on_master = isset($master[$path]) === true;
+            $on_slave  = isset($slave[$path]) === true;
 
-            $onMaster = isset($masterPaths[$path]) === true;
-            $onSlave  = isset($slavePaths[$path])  === true;
+            $path_master = $on_master ? $master[$path] : null;
+            $path_slave  = $on_slave ? $slave[$path] : null;
 
-            $master = $onMaster === true ? $masterPaths[$path] : null;
-            $slave  = $onSlave  === true ? $slavePaths[$path]  : null;
-
-            // On both: UPDATE?
-            if ($onMaster === true && $onSlave === true) {
-
-                // Path files are different somehow.
-                if (static::isDiff($master, $slave) === true) {
-                    $this->updates[$path] = $master;
-                }
+            // Update: On both and different properties
+            if ($on_master === true && $on_slave === true && static::isSame($path_master, $path_slave) === false) {
+                $this->updates[$path] = $path_master;
             }
             // Write: on Master, not Slave
-            elseif ($onMaster === true && $onSlave === false) {
-
-                // Do not write directories: they get created with files.
-                $this->writes[$path] = $master;
+            elseif ($on_master === true && $on_slave === false) {
+                $this->writes[$path] = $path_master;
             }
             // Delete: not on Master, on Slave
-            elseif ($onMaster === false && $onSlave === true) {
-                $this->deletes[$path] = $slave;
+            elseif ($on_master === false && $on_slave === true) {
+                $this->deletes[$path] = $path_slave;
             }
         }
     }
 
     /**
      * Should these paths be updated?
-     *
-     * @param $path1
-     * @param $path2
-     * @return bool
      */
-    public static function isDiff($path1, $path2)
+    public static function isSame(StorageAttributes $one, StorageAttributes $two): bool
     {
-        $diffKeys   = array_diff_key($path1, $path2);
-        $diffValues = array_diff($path1, $path2);
+        if ($one->path() !== $two->path() ||
+            $one->isDir() !== $two->isDir() ||
+            $one->isFile() !== $two->isFile() ||
+            $one->type() !== $two->type() ||
+            $one->lastModified() !== $two->lastModified() ||
+            $one->visibility() !== $two->visibility()) {
+            return false;
+        }
 
-        return count($diffKeys) > 0 || count($diffValues) > 0;
+        if ($one instanceof FileAttributes && $two instanceof FileAttributes && $one->isFile() && $two->isFile()) {
+            return $one->fileSize() === $two->fileSize();
+        }
+
+        return true;
     }
 
     /**
      * Get paths to WRITE.
-     *
-     * @return array
      */
-    public function getWrites()
+    public function getWrites(): array
     {
         return $this->writes;
     }
 
     /**
      * Get paths to DELETE.
-     *
-     * @return array
      */
-    public function getDeletes()
+    public function getDeletes(): array
     {
         return $this->deletes;
     }
 
     /**
      * Get paths to UPDATES.
-     *
-     * @return array
      */
-    public function getUpdates()
+    public function getUpdates(): array
     {
         return $this->updates;
     }
@@ -127,20 +113,16 @@ class Util
     /**
      * Get paths on Filesystem.
      *
-     * @param FilesystemInterface $filesystem
-     * @param string              $dir        - Dir on filesystem to search.
-     * @return array
+     * @return StorageAttributes[]
      */
-    protected function getPaths(FilesystemInterface $filesystem, $dir)
+    protected function getPaths(Filesystem $filesystem, string $dir): array
     {
         $paths = [];
 
-        foreach ($filesystem->listContents($dir, $recursive = true) as $path) {
-
-            $path['dir'] = $path['type'] === 'dir';
+        foreach ($filesystem->listContents($dir, true) as $content) {
 
             // Use filepath as key for comparison between MASTER and SLAVE.
-            $paths[$path['path']] = $path;
+            $paths[$content->path()] = $content;
         }
 
         // Sort by key (filepath).
