@@ -3,4 +3,4 @@
 
 /vendor/
 /composer.lock
-/tests/sync-test
+/tests/sync-test/*
