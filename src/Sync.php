@@ -37,14 +37,14 @@ class Sync
      */
     protected $util;
 
-    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $dir = '/')
+    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $directory = '/')
     {
         $this->master = $master;
         $this->slave  = $slave;
 
         $this->config = $config;
 
-        $this->util = new Util($master, $slave, $dir);
+        $this->util = new Util($master, $slave, $directory);
     }
 
     /**
