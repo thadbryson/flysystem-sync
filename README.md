@@ -3,14 +3,14 @@ Flysystem Sync Plugin
 
 About
 -----
-This is a wrapper for [Flysystem](https://github.com/thephpleague/flysystem) version 2 and up.
+This is a wrapper for [Flysystem](https://github.com/thephpleague/flysystem) version 2 and 3.
 Note that v1.* is a plugin for Flysystem v1.*.
 
 Installation
 ------------
 Use Composer:
 ```
-"thadbryson/flysystem-sync": "^2.0"
+"thadbryson/flysystem-sync": ">=2.0"
 ```
 
 Supports PHP v7.2 and up.
