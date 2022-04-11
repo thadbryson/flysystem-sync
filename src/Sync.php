@@ -60,7 +60,7 @@ class Sync
      *
      * @return $this
      */
-    public function syncWrites()
+    public function syncWrites(): Sync
     {
         foreach ($this->util->getWrites() as $path) {
             $this->put($path);
@@ -74,7 +74,7 @@ class Sync
      *
      * @return $this
      */
-    public function syncUpdates()
+    public function syncUpdates(): Sync
     {
         foreach ($this->util->getUpdates() as $path) {
             $this->put($path);
@@ -88,7 +88,7 @@ class Sync
      *
      * @return $this
      */
-    public function syncDeletes()
+    public function syncDeletes(): Sync
     {
         foreach ($this->util->getDeletes() as $path) {
 
@@ -110,7 +110,7 @@ class Sync
      *
      * @return $this
      */
-    public function sync()
+    public function sync(): Sync
     {
         return $this
             ->syncWrites()
