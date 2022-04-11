@@ -8,6 +8,10 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\StorageAttributes;
 
+/**
+ * Helper class for the Sync class.
+ * Gets filepaths that need writing, updating, and deleting.
+ */
 class Util
 {
     /**
@@ -88,6 +92,8 @@ class Util
 
     /**
      * Get paths to WRITE.
+     *
+     * @return string[]
      */
     public function getWrites(): array
     {
@@ -96,6 +102,8 @@ class Util
 
     /**
      * Get paths to DELETE.
+     *
+     * @return string[]
      */
     public function getDeletes(): array
     {
@@ -104,6 +112,8 @@ class Util
 
     /**
      * Get paths to UPDATES.
+     *
+     * @return string[]
      */
     public function getUpdates(): array
     {
