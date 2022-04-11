@@ -1,5 +1,5 @@
-Flysystem Sync Plugin
-=====================
+Flysystem Sync
+==============
 
 About
 -----
