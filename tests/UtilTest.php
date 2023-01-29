@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Tests;
 
 use PHPUnit\Framework\TestCase;
+use TCB\FlysystemSync\Sync;
 
 final class UtilTest extends TestCase
 {
@@ -51,5 +52,28 @@ final class UtilTest extends TestCase
 
         $this->assertCount(1, $paths);
         $this->assertEquals('folder1/on-both.txt', $paths['folder1/on-both.txt']->path());
+    }
+
+    /**
+     * Test Sync->getUpdates() with modification time
+     * The modification time on slave is always different, because it is the time the file is uploaded to the slave
+     */
+    public function testGetUpdatesWithModification(): void
+    {
+        $master = $this->sync->getMaster();
+        $slave = $this->sync->getSlave();
+
+        $lastModified = $master->lastModified('folder1/on-both-same.txt');
+        sleep(1);
+        $master->write('folder1/on-both-same.txt', '');
+
+        $this->assertNotSame($lastModified, $master->lastModified('folder1/on-both-same.txt'));
+
+        $sync = new Sync($master, $slave);
+        $paths = $sync->getUtil()->getUpdates();
+
+        $this->assertCount(1, $paths);
+        $this->assertEquals('folder1/on-both.txt', $paths['folder1/on-both.txt']->path());
+        $this->assertNotContains('folder1/on-both-same.txt', $paths);
     }
 }
