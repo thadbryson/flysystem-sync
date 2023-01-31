@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\StorageAttributes;
 
 class Sync
@@ -12,14 +12,14 @@ class Sync
     /**
      * Master filesystem.
      *
-     * @var Filesystem
+     * @var FilesystemOperator
      */
     protected $master;
 
     /**
      * Slave filesystem.
      *
-     * @var Filesystem
+     * @var FilesystemOperator
      */
     protected $slave;
 
@@ -37,7 +37,7 @@ class Sync
      */
     protected $util;
 
-    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $directory = '/')
+    public function __construct(FilesystemOperator $master, FilesystemOperator $slave, array $config = [], string $directory = '/')
     {
         $this->master = $master;
         $this->slave  = $slave;
@@ -45,6 +45,16 @@ class Sync
         $this->config = $config;
 
         $this->util = new Util($master, $slave, $directory);
+    }
+
+    public function getMaster(): FilesystemOperator
+    {
+        return $this->master;
+    }
+
+    public function getSlave(): FilesystemOperator
+    {
+        return $this->slave;
     }
 
     /**

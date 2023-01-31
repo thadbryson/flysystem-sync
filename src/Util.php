@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\StorageAttributes;
 
 /**
@@ -35,7 +35,7 @@ class Util
      */
     protected $deletes = [];
 
-    public function __construct(Filesystem $master, Filesystem $slave, string $dir = '/')
+    public function __construct(FilesystemOperator $master, FilesystemOperator $slave, string $dir = '/')
     {
         $master = $this->getPaths($master, $dir);
         $slave  = $this->getPaths($slave, $dir);
@@ -78,7 +78,6 @@ class Util
             $one->isDir() !== $two->isDir() ||
             $one->isFile() !== $two->isFile() ||
             $one->type() !== $two->type() ||
-            $one->lastModified() !== $two->lastModified() ||
             $one->visibility() !== $two->visibility()) {
             return false;
         }
@@ -125,7 +124,7 @@ class Util
      *
      * @return StorageAttributes[]
      */
-    protected function getPaths(Filesystem $filesystem, string $dir): array
+    protected function getPaths(FilesystemOperator $filesystem, string $dir): array
     {
         $paths = [];
 
