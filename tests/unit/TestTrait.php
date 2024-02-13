@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Tests;
+namespace Tests\Unit;
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter as Adapter;
@@ -26,15 +26,18 @@ trait TestTrait
 
     public function setUp(): void
     {
-        $this->output = __DIR__ . '/sync-test';
+        $this->output = __DIR__ . '/../sync-test';
         $this->deleteDirectory($this->output);
 
-        $this->copyDir(__DIR__ . '/sync-test-seed', __DIR__ . '/sync-test-seed', $this->output);
+        $this->copyDir(
+            __DIR__ . '/../sync-test-seed',
+            __DIR__ . '/../sync-test-seed',
+            $this->output);
 
-        $master = new Filesystem(new Adapter(__DIR__ . '/sync-test/master'));
-        $slave  = new Filesystem(new Adapter(__DIR__ . '/sync-test/slave'));
+        $source = new Filesystem(new Adapter(__DIR__ . '/../sync-test/source'));
+        $target  = new Filesystem(new Adapter(__DIR__ . '/../sync-test/target'));
 
-        $this->sync = new Sync($master, $slave);
+        $this->sync = new Sync($source, $target);
     }
 
     /**

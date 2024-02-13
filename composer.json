@@ -1,30 +1,33 @@
 {
-    "name":          "thadbryson/flysystem-sync",
-    "description":   "Flysystem wrapper to sync directories.",
-    "license":       "MIT",
-    "authors":       [
+    "name":              "thadbryson/flysystem-sync",
+    "description":       "Flysystem wrapper to sync directories.",
+    "license":           "MIT",
+    "authors":           [
         {
             "name":     "Thad Bryson",
             "email":    "thadbry@gmail.com",
             "homepage": "http://thadbryson.co"
         }
     ],
-    "require":       {
+    "require":           {
         "php":              "^7.2 || ^8.0",
-        "league/flysystem": ">=2.0"
+        "league/flysystem": "^3.0"
     },
-    "require-dev":   {
-        "phpunit/phpunit": "^8.5 || ^9.4"
+    "require-dev":       {
+        "phpunit/phpunit":           "^8.5 || ^9.4",
+        "roave/security-advisories": "dev-latest"
     },
-    "autoload":      {
+    "autoload":          {
         "psr-4": {
             "TCB\\FlysystemSync\\": "src/"
         }
     },
-    "autoload-dev":  {
+    "autoload-dev":      {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\Unit\\": "tests/unit/"
         }
     },
-    "prefer-stable": true
+    "minimum-stability": "dev",
+    "prefer-stable":     true,
+    "version":           "dev-main"
 }

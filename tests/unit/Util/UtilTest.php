@@ -2,9 +2,10 @@
 
 declare(strict_types = 1);
 
-namespace Tests;
+namespace Tests\Unit\Util;
 
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\TestTrait;
 
 final class UtilTest extends TestCase
 {
@@ -23,7 +24,7 @@ final class UtilTest extends TestCase
         $this->assertEquals('create-dir/1.txt', $paths['create-dir/1.txt']->path());
         $this->assertEquals('create-dir/2.yml', $paths['create-dir/2.yml']->path());
         $this->assertEquals('create-dir/3.php', $paths['create-dir/3.php']->path());
-        $this->assertEquals('folder1/master.txt', $paths['folder1/master.txt']->path());
+        $this->assertEquals('folder1/source.txt', $paths['folder1/source.txt']->path());
     }
 
     /**
@@ -39,7 +40,7 @@ final class UtilTest extends TestCase
         $this->assertEquals('delete-dir/delete-three/huh.txt', $paths['delete-dir/delete-three/huh.txt']->path());
         $this->assertEquals('delete-dir/me1.txt', $paths['delete-dir/me1.txt']->path());
         $this->assertEquals('folder1/delete.txt', $paths['folder1/delete.txt']->path());
-        $this->assertEquals('folder1/slave.txt', $paths['folder1/slave.txt']->path());
+        $this->assertEquals('folder1/target.txt', $paths['folder1/target.txt']->path());
     }
 
     /**

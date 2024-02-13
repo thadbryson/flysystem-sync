@@ -15,56 +15,56 @@ use League\Flysystem\StorageAttributes;
 class Util
 {
     /**
-     * Paths to update (on SLAVE and MASTER but later timestamp on MASTER).
+     * Paths to update (on TARGET and SOURCE but later timestamp on SOURCE).
      *
      * @var iterable|StorageAttributes[]
      */
     protected $updates = [];
 
     /**
-     * Paths to write (on MASTER but NOT SLAVE).
+     * Paths to write (on SOURCE but NOT TARGET).
      *
      * @var iterable|StorageAttributes[]
      */
     protected $writes = [];
 
     /**
-     * Paths to delete (on SLAVE but not MASTER).
+     * Paths to delete (on TARGET but not SOURCE).
      *
      * @var iterable|StorageAttributes[]
      */
     protected $deletes = [];
 
-    public function __construct(Filesystem $master, Filesystem $slave, string $dir = '/')
+    public function __construct(Filesystem $source, Filesystem $target, string $dir = '/')
     {
-        $master = $this->getPaths($master, $dir);
-        $slave  = $this->getPaths($slave, $dir);
+        $source = $this->getPaths($source, $dir);
+        $target  = $this->getPaths($target, $dir);
 
         // Get all file paths.
         $all = array_merge(
-            array_keys($master),
-            array_keys($slave)
+            array_keys($source),
+            array_keys($target)
         );
 
         //  Find all WRITE, UPDATE, and DELETE paths.
         foreach ($all as $path) {
-            $on_master = isset($master[$path]) === true;
-            $on_slave  = isset($slave[$path]) === true;
+            $on_source = isset($source[$path]) === true;
+            $on_target  = isset($target[$path]) === true;
 
-            $path_master = $on_master ? $master[$path] : null;
-            $path_slave  = $on_slave ? $slave[$path] : null;
+            $path_source = $on_source ? $source[$path] : null;
+            $path_target  = $on_target ? $target[$path] : null;
 
             // Update: On both and different properties
-            if ($on_master === true && $on_slave === true && static::isSame($path_master, $path_slave) === false) {
-                $this->updates[$path] = $path_master;
+            if ($on_source === true && $on_target === true && static::isSame($path_source, $path_target) === false) {
+                $this->updates[$path] = $path_source;
             }
-            // Write: on Master, not Slave
-            elseif ($on_master === true && $on_slave === false) {
-                $this->writes[$path] = $path_master;
+            // Write: on Source, not Target
+            elseif ($on_source === true && $on_target === false) {
+                $this->writes[$path] = $path_source;
             }
-            // Delete: not on Master, on Slave
-            elseif ($on_master === false && $on_slave === true) {
-                $this->deletes[$path] = $path_slave;
+            // Delete: not on Source, on Target
+            elseif ($on_source === false && $on_target === true) {
+                $this->deletes[$path] = $path_target;
             }
         }
     }
@@ -131,7 +131,7 @@ class Util
 
         foreach ($filesystem->listContents($dir, true) as $content) {
 
-            // Use filepath as key for comparison between MASTER and SLAVE.
+            // Use filepath as key for comparison between SOURCE and TARGET.
             $paths[$content->path()] = $content;
         }
 

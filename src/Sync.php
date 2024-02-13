@@ -10,18 +10,18 @@ use League\Flysystem\StorageAttributes;
 class Sync
 {
     /**
-     * Master filesystem.
+     * Source filesystem.
      *
      * @var Filesystem
      */
-    protected $master;
+    protected $source;
 
     /**
-     * Slave filesystem.
+     * Target filesystem.
      *
      * @var Filesystem
      */
-    protected $slave;
+    protected $target;
 
     /**
      * Configuration for Adapter.
@@ -37,14 +37,14 @@ class Sync
      */
     protected $util;
 
-    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $directory = '/')
+    public function __construct(Filesystem $source, Filesystem $target, array $config = [], string $directory = '/')
     {
-        $this->master = $master;
-        $this->slave  = $slave;
+        $this->source = $source;
+        $this->target  = $target;
 
         $this->config = $config;
 
-        $this->util = new Util($master, $slave, $directory);
+        $this->util = new Util($source, $target, $directory);
     }
 
     /**
@@ -94,11 +94,11 @@ class Sync
 
             // A dir delete may of deleted this path already.
             if ($path->isFile()) {
-                $this->slave->delete($path->path());
+                $this->target->delete($path->path());
             }
             // A dir? They're deleted a special way.
             elseif ($path->isDir()) {
-                $this->slave->deleteDirectory($path->path());
+                $this->target->deleteDirectory($path->path());
             }
         }
 
@@ -119,19 +119,19 @@ class Sync
     }
 
     /**
-     * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
+     * Call ->put() on $target. Update/Write content from $source. Also sets visibility on target.
      */
     protected function put(StorageAttributes $path): void
     {
         // Otherwise create or update the file.
         if ($path->isFile()) {
-            $contents = $this->master->readStream($path->path());
+            $contents = $this->source->readStream($path->path());
 
-            $this->slave->writeStream($path->path(), $contents, $this->config);
+            $this->target->writeStream($path->path(), $contents, $this->config);
         }
         // A dir? Create it.
         elseif ($path->isDir()) {
-            $this->slave->createDirectory($path->path(), $this->config);
+            $this->target->createDirectory($path->path(), $this->config);
         }
     }
 }
