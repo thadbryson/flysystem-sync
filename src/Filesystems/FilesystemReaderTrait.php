@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync;
+namespace TCB\FlysystemSync\Filesystems;
 
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FilesystemReader;

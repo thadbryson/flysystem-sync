@@ -8,7 +8,7 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\FilesystemReadOnly;
+use TCB\FlysystemSync\Filesystems\FilesystemReadOnly;
 
 class PathCollection
 {

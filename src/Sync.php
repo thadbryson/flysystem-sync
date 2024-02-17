@@ -4,17 +4,22 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\FilesystemReader;
+use League\Flysystem\FilesystemWriter;
 use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Collections\HydratedCollection;
 use TCB\FlysystemSync\Collections\PathCollection;
+use TCB\FlysystemSync\Filesystems\FilesystemReadOnly;
 
-class Sync
+readonly class Sync
 {
-    protected readonly FilesystemReadOnly $reader;
+    protected FilesystemReadOnly $reader;
 
-    protected readonly PathCollection $paths;
+    protected PathCollection $paths;
 
     public function __construct(Filesystem $reader)
     {
@@ -33,6 +38,11 @@ class Sync
         $this->paths->add($orig);
 
         return $this;
+    }
+
+    public function reads(): array
+    {
+
     }
 
     public function sync(FilesystemOperator $writer): void
@@ -57,14 +67,14 @@ class Sync
         }
     }
 
-    protected function delete(FilesystemOperator $writer, StorageAttributes $dest): void
+    protected function delete(FilesystemWriter $writer, StorageAttributes $dest): void
     {
         $dest->isFile() ?
             $writer->delete($dest->path()) :
             $writer->deleteDirectory($dest->path());
     }
 
-    protected function put(FilesystemOperator $writer, StorageAttributes $orig, string $dest_path): void
+    protected function put(FilesystemWriter $writer, StorageAttributes $orig, string $dest_path): void
     {
         $orig->isDir() ?
             $writer->createDirectory($dest_path) :

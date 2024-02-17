@@ -2,12 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync;
+namespace TCB\FlysystemSync\Filesystems;
 
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\StorageAttributes;
+use TCB\FlysystemSync\Exceptions;
 
 readonly class FilesystemReadOnly implements FilesystemReader
 {
@@ -38,5 +39,30 @@ readonly class FilesystemReadOnly implements FilesystemReader
     public function assertHas(string $path): StorageAttributes
     {
         return $this->attributes($path) ?? throw new Exceptions\PathNotFound($path);
+    }
+
+    public function hydrate(string ...$paths): array
+    {
+        $found = [];
+
+        foreach ($paths as $path) {
+            $current = $this->attributes($path);
+
+            if ($current instanceof FileAttributes) {
+                $found[$path] = $current;
+            }
+            elseif ($current instanceof DirectoryAttributes) {
+                $listing = $this->listContents($path, FilesystemReader::LIST_DEEP);
+
+                foreach ($listing as $deep) {
+                    $found[$deep->path()] = $deep;
+                }
+            }
+            else {
+                throw new \Exception('invalid path: ' . $path);
+            }
+        }
+
+        return $found;
     }
 }

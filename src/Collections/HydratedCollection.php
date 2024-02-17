@@ -36,7 +36,7 @@ readonly class HydratedCollection
         $writer = $paths->hydrate($writer);
 
         $this->creates = array_diff_key($reader, $writer);      // On SOURCES only
-        $this->deletes = array_diff_key($writer, $reader);      // On TARGETs only
+        $this->deletes = array_diff_key($writer, $reader);      // On TARGETS only
 
         // On BOTH and different
         // We only want pairs with different properties.
