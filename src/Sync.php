@@ -5,133 +5,72 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemOperator;
 use League\Flysystem\StorageAttributes;
+use TCB\FlysystemSync\Collections\HydratedCollection;
+use TCB\FlysystemSync\Collections\PathCollection;
 
 class Sync
 {
-    /**
-     * Source filesystem.
-     *
-     * @var Filesystem
-     */
-    protected $source;
+    protected readonly FilesystemReadOnly $reader;
 
-    /**
-     * Target filesystem.
-     *
-     * @var Filesystem
-     */
-    protected $target;
+    protected readonly PathCollection $paths;
 
-    /**
-     * Configuration for Adapter.
-     *
-     * @var array
-     */
-    protected $config;
-
-    /**
-     * Util object for getting WRITE, UPDATE, and DELETE paths.
-     *
-     * @var Util
-     */
-    protected $util;
-
-    public function __construct(Filesystem $source, Filesystem $target, array $config = [], string $directory = '/')
+    public function __construct(Filesystem $reader)
     {
-        $this->source = $source;
-        $this->target  = $target;
-
-        $this->config = $config;
-
-        $this->util = new Util($source, $target, $directory);
+        $this->reader = new FilesystemReadOnly($reader);
+        $this->paths  = new PathCollection;
     }
 
-    /**
-     * Get Util helper object used for getting WRITE, UPDATE, and DELETE paths.
-     */
-    public function getUtil(): Util
+    public function all(): array
     {
-        return $this->util;
+        return $this->paths->all();
     }
 
-    /**
-     * Sync any writes.
-     *
-     * @return $this
-     */
-    public function syncWrites(): Sync
+    public function add(string $orig): static
     {
-        foreach ($this->util->getWrites() as $path) {
-            $this->put($path);
-        }
+        $orig = $this->reader->assertHas($orig);
+        $this->paths->add($orig);
 
         return $this;
     }
 
-    /**
-     * Sync any updates.
-     *
-     * @return $this
-     */
-    public function syncUpdates(): Sync
+    public function sync(FilesystemOperator $writer): void
     {
-        foreach ($this->util->getUpdates() as $path) {
-            $this->put($path);
+        $hydrated = new HydratedCollection($this->reader, $writer, $this->paths);
+
+        /**
+         * @var StorageAttributes $orig
+         * @var StorageAttributes $dest
+         */
+
+        foreach ($hydrated->creates as $orig) {
+            $this->put($writer, $orig, $orig->path());
         }
 
-        return $this;
+        foreach ($hydrated->deletes as $dest) {
+            $this->delete($writer, $dest);
+        }
+
+        foreach ($hydrated->updates as [$orig, $dest]) {
+            $this->put($writer, $orig, $dest->path());
+        }
     }
 
-    /**
-     * Sync any deletes.
-     *
-     * @return $this
-     */
-    public function syncDeletes(): Sync
+    protected function delete(FilesystemOperator $writer, StorageAttributes $dest): void
     {
-        foreach ($this->util->getDeletes() as $path) {
-
-            // A dir delete may of deleted this path already.
-            if ($path->isFile()) {
-                $this->target->delete($path->path());
-            }
-            // A dir? They're deleted a special way.
-            elseif ($path->isDir()) {
-                $this->target->deleteDirectory($path->path());
-            }
-        }
-
-        return $this;
+        $dest->isFile() ?
+            $writer->delete($dest->path()) :
+            $writer->deleteDirectory($dest->path());
     }
 
-    /**
-     * Call $this->syncWrites(), $this->syncUpdates(), and $this->syncDeletes()
-     *
-     * @return $this
-     */
-    public function sync(): Sync
+    protected function put(FilesystemOperator $writer, StorageAttributes $orig, string $dest_path): void
     {
-        return $this
-            ->syncWrites()
-            ->syncUpdates()
-            ->syncDeletes();
-    }
-
-    /**
-     * Call ->put() on $target. Update/Write content from $source. Also sets visibility on target.
-     */
-    protected function put(StorageAttributes $path): void
-    {
-        // Otherwise create or update the file.
-        if ($path->isFile()) {
-            $contents = $this->source->readStream($path->path());
-
-            $this->target->writeStream($path->path(), $contents, $this->config);
-        }
-        // A dir? Create it.
-        elseif ($path->isDir()) {
-            $this->target->createDirectory($path->path(), $this->config);
-        }
+        $orig->isDir() ?
+            $writer->createDirectory($dest_path) :
+            $writer->writeStream(
+                $dest_path,
+                $this->reader->readStream($orig->path())
+            );
     }
 }

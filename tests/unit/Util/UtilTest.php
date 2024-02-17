@@ -12,11 +12,11 @@ final class UtilTest extends TestCase
     use TestTrait;
 
     /**
-     * Test Sync->getWrites()
+     * Test Sync->writes
      */
     public function testGetWrites(): void
     {
-        $paths = $this->sync->getUtil()->getWrites();
+        $paths = $this->sync->utility->writes;
 
         $this->assertCount(6, $paths);
         $this->assertEquals('create-dir', $paths['create-dir']->path());
@@ -28,11 +28,11 @@ final class UtilTest extends TestCase
     }
 
     /**
-     * Test Sync->getDeletes()
+     * Test Sync->deletes
      */
     public function testGetDeletes(): void
     {
-        $paths = $this->sync->getUtil()->getDeletes();
+        $paths = $this->sync->utility->deletes;
 
         $this->assertCount(6, $paths);
         $this->assertEquals('delete-dir', $paths['delete-dir']->path());
@@ -44,11 +44,11 @@ final class UtilTest extends TestCase
     }
 
     /**
-     * Test Sync->getUpdates()
+     * Test Sync->updates
      */
     public function testGetUpdates(): void
     {
-        $paths = $this->sync->getUtil()->getUpdates();
+        $paths = $this->sync->utility->updates;
 
         $this->assertCount(1, $paths);
         $this->assertEquals('folder1/on-both.txt', $paths['folder1/on-both.txt']->path());

@@ -16,10 +16,6 @@ Use Composer:
 Supports PHP v7.2 and up.
 
 - It helps you sync 2 directories at a time. There are two directory types.
-- Goal: remove source/target terminology
-- Goal: sync only specific files too
-- Goal: don't write new directories in Util->getWrites(), ->getUpdates()-> or ->getDeletes()
-- Goal: multiple save locations with adapters (MountManager)
 
 Source
 ------
@@ -31,6 +27,8 @@ Source directory. Where things are moved to or deleted from.
 
 How To
 ======
+
+Flysystem Docs: https://flysystem.thephpleague.com/docs/
 
 Here is some example code to set everything up.
 
@@ -63,9 +61,9 @@ $sync->syncUpdates();
 $sync->sync();
 
 // And you can get what all these paths are going to be separately.
-$paths = $sync->getUtil()->getWrites();  // On Source but not on Target.
-$paths = $sync->getUtil()->getDeletes(); // On Target but not on Source.
-$paths = $sync->getUtil()->getUpdates(); // On both Source and Target but with different properties.
+$paths = $sync->utility->getWrites();  // On Source but not on Target.
+$paths = $sync->utility->getDeletes(); // On Target but not on Source.
+$paths = $sync->utility->getUpdates(); // On both Source and Target but with different properties.
 
 ```
 
