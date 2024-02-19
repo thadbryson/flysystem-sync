@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync\Filesystems;
+namespace TCB\FlysystemSync\Filesystems\Traits;
 
 use League\Flysystem\DirectoryListing;
 use League\Flysystem\FilesystemReader;
 
-trait FilesystemReaderTrait
+trait ReadFunctions
 {
     /**
      * ONLY call the reader functions on this Filesystem.

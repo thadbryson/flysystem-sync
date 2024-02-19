@@ -8,12 +8,10 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
 
-class AttributesCompare
+class Compare
 {
-    public static function isSame(
-        StorageAttributes $path,
-        StorageAttributes $compare
-    ): bool {
+    public static function isSame(StorageAttributes $path, StorageAttributes $compare): bool
+    {
         return $compare instanceof FileAttributes ?
             static::isSameFile($path, $compare) :
             static::isSameDirectory($path, $compare);
@@ -57,7 +55,6 @@ class AttributesCompare
         return
             $info->isFile() === $compare->isFile() &&
             $info->isDir() === $compare->isDir() &&
-            $info->path() === $compare->path() &&
             $info->lastModified() === $compare->lastModified() &&
             $info->visibility() === $compare->visibility();
     }

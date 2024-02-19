@@ -4,83 +4,47 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemOperator;
-use League\Flysystem\FilesystemReader;
-use League\Flysystem\FilesystemWriter;
-use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Collections\HydratedCollection;
-use TCB\FlysystemSync\Collections\PathCollection;
-use TCB\FlysystemSync\Filesystems\FilesystemReadOnly;
+use TCB\FlysystemSync\Collections\Hydrator;
+use TCB\FlysystemSync\Filesystems\Collector;
 
-readonly class Sync
+class Sync
 {
-    protected FilesystemReadOnly $reader;
-
-    protected PathCollection $paths;
+    public readonly Filesystems\Collector $reader;
 
     public function __construct(Filesystem $reader)
     {
-        $this->reader = new FilesystemReadOnly($reader);
-        $this->paths  = new PathCollection;
+        $this->reader = new Filesystems\Collector($reader);
     }
 
-    public function all(): array
+    public function sync(Filesystem $writer): void
     {
-        return $this->paths->all();
-    }
+        $hydrator = new Hydrator(
+            $this->reader->all(),
+            $this->reader->clone($writer)->all()
+        );
 
-    public function add(string $orig): static
-    {
-        $orig = $this->reader->assertHas($orig);
-        $this->paths->add($orig);
+        $factory = new Actions\Factory($this->reader->reader, $writer);
 
-        return $this;
-    }
-
-    public function reads(): array
-    {
-
-    }
-
-    public function sync(FilesystemOperator $writer): void
-    {
-        $hydrated = new HydratedCollection($this->reader, $writer, $this->paths);
-
-        /**
-         * @var StorageAttributes $orig
-         * @var StorageAttributes $dest
-         */
-
-        foreach ($hydrated->creates as $orig) {
-            $this->put($writer, $orig, $orig->path());
+        foreach ($hydrator->creates as $target => $source) {
+            $factory
+                ->create($source, $target)
+                ->execute()
+            ;
         }
 
-        foreach ($hydrated->deletes as $dest) {
-            $this->delete($writer, $dest);
+        foreach ($hydrator->updates as [$source, $target]) {
+            $factory
+                ->update($source, $target)
+                ->execute()
+            ;
         }
 
-        foreach ($hydrated->updates as [$orig, $dest]) {
-            $this->put($writer, $orig, $dest->path());
+        foreach ($hydrator->deletes as $target) {
+            $factory
+                ->delete($target)
+                ->execute()
+            ;
         }
-    }
-
-    protected function delete(FilesystemWriter $writer, StorageAttributes $dest): void
-    {
-        $dest->isFile() ?
-            $writer->delete($dest->path()) :
-            $writer->deleteDirectory($dest->path());
-    }
-
-    protected function put(FilesystemWriter $writer, StorageAttributes $orig, string $dest_path): void
-    {
-        $orig->isDir() ?
-            $writer->createDirectory($dest_path) :
-            $writer->writeStream(
-                $dest_path,
-                $this->reader->readStream($orig->path())
-            );
     }
 }
