@@ -16,7 +16,7 @@ class Create implements Contract\Create, PathContract\File
     {
         $this->writer->writeStream(
             $this->target,
-            $this->reader->readStream($this->source)
+            $this->reader->read($this->source)
         );
     }
 }

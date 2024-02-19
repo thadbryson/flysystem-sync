@@ -7,32 +7,12 @@ namespace TCB\FlysystemSync\Filesystems;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Paths\Contract\Path;
 use TCB\FlysystemSync\Paths\Type;
 
-class Reader implements FilesystemReader
+class Reader
 {
-    use Traits\ReadFunctions;
-
-    public function makePath(string $path): Path
-    {
-        if ($this->pathExists($path) === false) {
-            return new Type\NullPath($path);
-        }
-
-        return $this->directoryExists($path) ?
-            new Type\Directory($path) :
-            new Type\File($path);
-    }
-
-    public function makeFile(string $path): Type\File
-    {
-        if ($this->fileExists($path) === true) {
-            return new Type\File($path);
-        }
-
-        throw new \Exception;
-    }
+    use Traits\ReadFunctions,
+        Traits\MakeFunctions;
 
     public function getDirectoryContents(string $location): array
     {
@@ -50,14 +30,5 @@ class Reader implements FilesystemReader
             });
 
         return $contents;
-    }
-
-    public function makeDirectory(string $path): Type\Directory
-    {
-        if ($this->directoryExists($path) === true) {
-            return new Type\Directory($path);
-        }
-
-        throw new \Exception;
     }
 }

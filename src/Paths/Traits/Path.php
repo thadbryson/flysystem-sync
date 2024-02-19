@@ -28,7 +28,18 @@ trait Path
         return $this->path;
     }
 
-    abstract public function isFile(): bool;
+    public function isFile(): bool
+    {
+        return $this instanceof Contract\File;
+    }
 
-    abstract public function isDirectory(): bool;
+    public function isDirectory(): bool
+    {
+        return $this instanceof Contract\Directory;
+    }
+
+    public function isNull(): bool
+    {
+        return $this instanceof Contract\NullPath;
+    }
 }

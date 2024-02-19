@@ -6,10 +6,8 @@ namespace TCB\FlysystemSync\Actions\Traits;
 
 use League\Flysystem\FilesystemOperator;
 use TCB\FlysystemSync\Filesystems\Reader;
+use TCB\FlysystemSync\Paths\Contract as PathContract;
 
-/**
- * @const array ASSERT
- */
 trait ActionTrait
 {
     protected readonly Reader $reader;
@@ -26,15 +24,19 @@ trait ActionTrait
         ?string $source,
         ?string $target
     ) {
-        $source_type = static::ASSERT['source'] ?? null;
-        $target_type = static::ASSERT['target'] ?? null;
 
-        if ($source_type !== null) {
-            $reader->assertType($source_type, $source);
+        if ($this->isDirectory() !== null) {
+            $reader->makeDirectory($source);
+            $reader->makeDirectory($target);
         }
 
-        if ($target_type !== null) {
-            (new Reader($writer))->assertType($target_type, $target);
+        if ($this->isFile() !== null) {
+            $reader->makeFile($source);
+            $reader->makeFile($target);
+        }
+
+        if ($this->isNull() !== null) {
+
         }
 
         $this->reader = $reader;
@@ -45,4 +47,24 @@ trait ActionTrait
     }
 
     abstract public function execute(): void;
+
+    public function path(): string
+    {
+        return $this->target;
+    }
+
+    public function isFile(): bool
+    {
+        return $this instanceof PathContract\File;
+    }
+
+    public function isDirectory(): bool
+    {
+        return $this instanceof PathContract\Directory;
+    }
+
+    public function isNull(): bool
+    {
+        return $this instanceof PathContract\NullPath;
+    }
 }

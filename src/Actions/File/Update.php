@@ -14,7 +14,7 @@ class Update implements Contract\Update, PathContract\File
 
     public function execute(): void
     {
-        $this->writer->delete($this->source);
+//        $this->writer->delete($this->source);
 
         $this->writer->writeStream(
             $this->target,

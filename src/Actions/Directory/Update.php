@@ -14,7 +14,7 @@ class Update implements Contract\Update, PathContract\Directory
 
     public function execute(): void
     {
-        $this->writer->deleteDirectory($this->target);
+//        $this->writer->deleteDirectory($this->target);
         $this->writer->createDirectory($this->target);
     }
 }
