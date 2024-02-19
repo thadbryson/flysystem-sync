@@ -6,7 +6,7 @@ namespace TCB\FlysystemSync;
 
 use League\Flysystem\Filesystem;
 use TCB\FlysystemSync\Collections\Hydrator;
-use TCB\FlysystemSync\Filesystems\Collector;
+use TCB\FlysystemSync\Paths\Type\NullPath;
 
 class Sync
 {
@@ -26,25 +26,22 @@ class Sync
 
         $factory = new Actions\Factory($this->reader->reader, $writer);
 
-        foreach ($hydrator->creates as $target => $source) {
+        foreach ($hydrator->creates as $source) {
             $factory
-                ->create($source, $target)
-                ->execute()
-            ;
+                ->create($source, new NullPath($source->path()))
+                ->execute();
         }
 
         foreach ($hydrator->updates as [$source, $target]) {
             $factory
                 ->update($source, $target)
-                ->execute()
-            ;
+                ->execute();
         }
 
         foreach ($hydrator->deletes as $target) {
             $factory
                 ->delete($target)
-                ->execute()
-            ;
+                ->execute();
         }
     }
 }

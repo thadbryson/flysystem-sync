@@ -5,14 +5,9 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Actions;
 
 use League\Flysystem\FilesystemOperator;
-use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Actions\Directory\Create as CreateDirectory;
-use TCB\FlysystemSync\Actions\Directory\Delete as DeleteDirectory;
-use TCB\FlysystemSync\Actions\Directory\Update as UpdateDirectory;
-use TCB\FlysystemSync\Actions\File\Create as CreateFile;
-use TCB\FlysystemSync\Actions\File\Delete as DeleteFile;
-use TCB\FlysystemSync\Actions\File\Update as UpdateFile;
 use TCB\FlysystemSync\Filesystems\Reader;
+use TCB\FlysystemSync\Paths\Contract;
+use TCB\FlysystemSync\Paths\Type\NullPath;
 
 readonly class Factory
 {
@@ -26,23 +21,23 @@ readonly class Factory
         $this->writer = $writer;
     }
 
-    public function create(StorageAttributes $source, string $target): CreateDirectory|CreateFile
+    public function create(Contract\Path $source, NullPath $target): Directory\Create|File\Create
     {
-        return $source->isDir() ?
-            new Directory\Create($this->reader, $this->writer, $source->path(), $target) :
-            new File\Create($this->reader, $this->writer, $source->path(), $target);
+        return $source->isDirectory() ?
+            new Directory\Create($this->reader, $this->writer, $source->path(), $target->path()) :
+            new File\Create($this->reader, $this->writer, $source->path(), $target->path());
     }
 
-    public function update(StorageAttributes $source, StorageAttributes $target): UpdateDirectory|UpdateFile
+    public function update(Contract\Path $source, Contract\Path $target): Directory\Update|File\Update
     {
-        return $source->isDir() ?
+        return $source->isDirectory() ?
             new Directory\Update($this->reader, $this->writer, $source->path(), $target->path()) :
             new File\Update($this->reader, $this->writer, $source->path(), $target->path());
     }
 
-    public function delete(StorageAttributes $target): DeleteDirectory|DeleteFile
+    public function delete(Contract\Path $target): Directory\Delete|File\Delete
     {
-        return $target->isDir() ?
+        return $target->isDirectory() ?
             new Directory\Delete($this->reader, $this->writer, null, $target->path()) :
             new File\Delete($this->reader, $this->writer, null, $target->path());
     }

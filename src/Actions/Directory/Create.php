@@ -6,16 +6,11 @@ namespace TCB\FlysystemSync\Actions\Directory;
 
 use TCB\FlysystemSync\Actions\Contract;
 use TCB\FlysystemSync\Actions\Traits\ActionTrait;
-use TCB\FlysystemSync\PathTypes;
+use TCB\FlysystemSync\Paths\Contract as PathContract;
 
-class Create implements Contract\Directory, Contract\Create
+class Create implements Contract\Create, PathContract\Directory
 {
     use ActionTrait;
-
-    public const array ASSERT = [
-        'source' => PathTypes::DIRECTORY,
-        'target' => PathTypes::NON_EXISTING,
-    ];
 
     public function execute(): void
     {

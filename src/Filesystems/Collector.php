@@ -4,96 +4,72 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Filesystems;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Enums\PathTypes;
+use TCB\FlysystemSync\Paths\Contract\Path;
+use TCB\FlysystemSync\Paths\Type\Directory;
+use TCB\FlysystemSync\Paths\Type\File;
+use function array_merge;
 
 class Collector
 {
-    protected array $items = [];
-
     public readonly Reader $reader;
+
+    /**
+     * @var Path[]
+     */
+    protected array $items = [];
 
     public function __construct(FilesystemReader $reader)
     {
         $this->reader = new Reader($reader);
     }
 
-    public function clone(FilesystemReader $clone): static
+    public function clone(FilesystemReader $reader): static
     {
-        $clone = new static($clone);
-        $clone->collect(...$this->paths());
+        $collector = new static($reader);
 
-        return $clone;
+        foreach ($this->all() as $path) {
+            $collector->path($path->path());
+        }
+
+        return $collector;
     }
 
     /**
-     * @return FileAttributes[]|DirectoryAttributes[]|null[]
+     * @return Directory[]|File[]
      */
     public function all(): array
     {
         return $this->items;
     }
 
-    /**
-     * Return all string paths collected.
-     *
-     * @return string[]
-     */
-    public function paths(): array
+    public function path(string $path): static
     {
-        return array_keys($this->items);
+        $this->items[$path] = $this->reader->makePath($path);
+
+        return $this;
     }
 
-    public function collect(string ...$paths): static
+    public function file(string $file): static
     {
-        return $this->collectInternal(PathTypes::NON_EXISTING, $paths);
+        $this->items[$file] = $this->reader->makeFile($file);
+
+        return $this;
     }
 
-    public function addFiles(string ...$files): static
+    public function directory(string $directory): static
     {
-        return $this->collectInternal(PathTypes::FILE, $files);
-    }
-
-    public function addDirectories(string ...$directories): static
-    {
-        return $this->collectInternal(PathTypes::DIRECTORY, $directories);
-    }
-
-    protected function collectInternal(?PathTypes $assertType, array $paths): static
-    {
-        foreach ($paths as $path) {
-            /** @var FileAttributes|DirectoryAttributes|null $attributes */
-            $attributes = $this->reader->attributes($path);
-
-            // Assert file/directory type are correct.
-            $type = $assertType === null ?
-                PathTypes::match($attributes) :
-                PathTypes::assert($assertType, $attributes);
-
-            match ($type) {
-                PathTypes::NON_EXISTING => $this->items[$path] = null,
-                PathTypes::FILE         => $this->items[$attributes->path()] = $attributes,
-
-                // Lists all paths in DOT notation.
-                // Ex: [
-                //     '/home/thad/apps/browser',
-                //     '/home/thad/docs/license.pdf',
-                // ]
-                //
-                // No reason to do recursion here.
-                PathTypes::DIRECTORY    => $this
-                    ->reader->listContents(
-                        $attributes->path(),
-                        FilesystemReader::LIST_DEEP
-                    )
-                    ->map(
-                        fn (StorageAttributes $content) => $this->items[$content->path()] = $content
-                    )
-            };
-        }
+        // Lists all paths in DOT notation.
+        // Ex: [
+        //     '/home/thad/apps/browser',
+        //     '/home/thad/docs/license.pdf',
+        // ]
+        //
+        // No reason to do recursion here.
+        $this->items = array_merge(
+            $this->items,
+            $this->reader->getDirectoryContents($directory)
+        );
 
         return $this;
     }

@@ -5,9 +5,7 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Collections;
 
 use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Attributes;
-use TCB\FlysystemSync\Enums\PathTypes;
-use TCB\FlysystemSync\Exceptions;
+use TCB\FlysystemSync\Paths\Contract;
 use function array_diff_key;
 use function array_filter;
 use function array_intersect_key;
@@ -30,10 +28,10 @@ readonly class Hydrator
     public array $updates;
 
     /**
-     * @param ?StorageAttributes[] $reader - path string key => ?StorageAttributes
-     * @param ?StorageAttributes[] $writer - path string key => ?StorageAttributes
+     * @param Contract\Path[] $reader - path string key
+     * @param Contract\Path[] $writer - path string key
      *
-     * @throws Exceptions\PathNotFound
+     * @throws \Exception
      */
     public function __construct(array $reader, array $writer)
     {
@@ -46,14 +44,12 @@ readonly class Hydrator
         // On BOTH and different, leaves SOURCES
         // We only want pairs with different properties.
         $updates = array_intersect_key($reader, $writer);
-        $updates = array_map(function (StorageAttributes $source, string $path): ?array {
-            $this->assertPath($path, $source);
-
+        $updates = array_map(function (Contract\Path $source): ?array {
             // TARGET should exist.
-            $target = $writer[$source->path()] ?? throw new Exceptions\PathNotFound($source->path());
+            $target = $writer[$source->path()] ?? throw new \Exception;
 
             // Only if they're different.
-            if (Attributes\Compare::isSame($source, $target)) {
+            if ($source->isSame($target)) {
                 return null;
             }
 
@@ -62,26 +58,8 @@ readonly class Hydrator
         $updates = array_filter($updates, fn (?array $current) => $current !== null);
 
         // Make sure everything is valid.
-        $this->creates = $this->assertPathsAll($creates);
-        $this->deletes = $this->assertPathsAll($deletes);
+        $this->creates = $creates;
+        $this->deletes = $deletes;
         $this->updates = $updates;
-    }
-
-    protected function assertPathsAll(array $collection): array
-    {
-        foreach ($collection as $path => $current) {
-            $this->assertPath($path, $current);
-        }
-
-        return $collection;
-    }
-
-    protected function assertPath(string $path, ?StorageAttributes $attributes): void
-    {
-        PathTypes::assertPath($attributes);
-
-        if ($path !== $attributes->path()) {
-            throw new \Exception('PATHs do not match key/Attributes');
-        }
     }
 }

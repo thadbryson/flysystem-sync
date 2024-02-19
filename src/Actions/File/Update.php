@@ -6,16 +6,11 @@ namespace TCB\FlysystemSync\Actions\File;
 
 use TCB\FlysystemSync\Actions\Contract;
 use TCB\FlysystemSync\Actions\Traits\ActionTrait;
-use TCB\FlysystemSync\PathTypes;
+use TCB\FlysystemSync\Paths\Contract as PathContract;
 
-class Update implements Contract\File, Contract\Update
+class Update implements Contract\Update, PathContract\File
 {
     use ActionTrait;
-
-    public const array ASSERT = [
-        'source' => PathTypes::FILE,
-        'target' => PathTypes::NON_EXISTING,
-    ];
 
     public function execute(): void
     {

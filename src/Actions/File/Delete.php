@@ -6,16 +6,11 @@ namespace TCB\FlysystemSync\Actions\File;
 
 use TCB\FlysystemSync\Actions\Contract;
 use TCB\FlysystemSync\Actions\Traits\ActionTrait;
-use TCB\FlysystemSync\PathTypes;
+use TCB\FlysystemSync\Paths\Contract as PathContract;
 
-class Delete implements Contract\File, Contract\Delete
+class Delete implements Contract\Delete, PathContract\File
 {
     use ActionTrait;
-
-    public const array ASSERT = [
-        'source' => PathTypes::NON_EXISTING,
-        'target' => PathTypes::FILE,
-    ];
 
     public function execute(): void
     {

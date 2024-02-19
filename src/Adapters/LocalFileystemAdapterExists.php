@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Adapters;
 
+use Exception;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\UnixVisibility\VisibilityConverter;
 use League\MimeTypeDetection\MimeTypeDetector;
@@ -37,7 +38,7 @@ class LocalFileystemAdapterExists extends LocalFilesystemAdapter
         );
 
         if (is_dir($location) === false) {
-            throw new \Exception('Filesystem location does not exist: ' . $location);
+            throw new Exception('Filesystem location does not exist: ' . $location);
         }
     }
 
