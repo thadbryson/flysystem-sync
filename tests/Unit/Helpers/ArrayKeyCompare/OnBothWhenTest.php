@@ -6,7 +6,9 @@ namespace Tests\Unit\Helpers\ArrayKeyCompare;
 
 use TCB\FlysystemSync\Helpers\ArrayKeyCompare;
 
-class OnFirstOnlyTest extends \Codeception\Test\Unit
+use function array_fill;
+
+class OnBothWhenTest extends \Codeception\Test\Unit
 {
     protected readonly ArrayKeyCompare $compare;
 
@@ -31,23 +33,27 @@ class OnFirstOnlyTest extends \Codeception\Test\Unit
         ]);
     }
 
-    public function testOnFirstOnly(): void
+    public function testAllOnBothNumericKeys(): void
     {
-        $this->assertEquals([
-            'one'   => 1,
-            'three' => 'nothing',
-            'again' => [
-                'yup' => [],
-            ],
-        ], $this->compare->onFirstOnly());
-    }
+        $filled = array_fill(0, 20, null);
 
-    public function testOnSecondOnly(): void
-    {
+        $compare = new ArrayKeyCompare($filled, $filled);
+
+        $when = fn (string|int $key): bool => $key % 2 === 0;
+
+        $both_when = $compare->onBothWhen($when);
+
         $this->assertEquals([
-            'one-diff'   => 2,
-            'three-diff' => null,
-            'three-deep' => ['again' => []],
-        ], $this->compare->onSecondOnly());
+            0  => null,
+            2  => null,
+            4  => null,
+            6  => null,
+            8  => null,
+            10 => null,
+            12 => null,
+            14 => null,
+            16 => null,
+            18 => null,
+        ], $both_when);
     }
 }

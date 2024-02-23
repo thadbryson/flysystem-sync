@@ -5,8 +5,9 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Helpers;
 
 use function array_diff_key;
-use function array_filter;
 use function array_intersect_key;
+use function array_key_exists;
+use function var_dump;
 
 readonly class ArrayKeyCompare
 {
@@ -40,18 +41,22 @@ readonly class ArrayKeyCompare
 
     public function onBothWhen(callable $comparison): array
     {
+        $both = [];
+
         // On BOTH but different, leaves first
+        foreach ($this->onBoth() as $key => $first) {
+            // Must use array_key_exists, value could be NULL and isset() or ??  null wouldn't work.
+            if (array_key_exists($key, $this->second) === false) {
+                continue;
+            }
 
-        // We only want pairs with different properties.
-        return array_filter(
+            $second = $this->second[$key];
 
-            $this->onBoth(),
+            if ($comparison($key, $first, $second) === true) {
+                $both[$key] = $first;
+            }
+        }
 
-            fn (mixed $source, int|string $key): bool => true === $comparison(
-                    $key,
-                    $source,
-                    $this->second[$source->path] ?? null
-                )
-        );
+        return $both;
     }
 }
