@@ -4,44 +4,40 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\Filesystem;
-use TCB\FlysystemSync\Collections\Hydrator;
-use TCB\FlysystemSync\Paths\Type\NullPath;
+use League\Flysystem\FilesystemAdapter;
+use TCB\FlysystemSync\Paths\Collection;
+use TCB\FlysystemSync\Runners\Runner;
 
+/**
+ * @todo
+ *      - Logging
+ *      - Exception handling with logging
+ *      - CLI system
+ */
 class Sync
 {
-    public readonly Filesystems\Collector $reader;
+    public readonly Collection $items;
 
-    public function __construct(Filesystem $reader)
+    public array $log = [];
+
+    public function __construct()
     {
-        $this->reader = new Filesystems\Collector($reader);
+        $this->items = new Collection;
     }
 
-    public function sync(Filesystem $writer): void
+    public function sync(FilesystemAdapter $reader, FilesystemAdapter $writer): array
     {
-        $hydrator = new Hydrator(
-            $this->reader->all(),
-            $this->reader->clone($writer)->all()
+        $runner = new Runner(
+            $reader,
+            $writer,
+            $this->items->getFiles(),
+            $this->items->getDirectories()
         );
 
-        $factory = new Actions\Factory($this->reader->reader, $writer);
-
-        foreach ($hydrator->creates as $source) {
-            $factory
-                ->create($source, new NullPath($source->path()))
-                ->execute();
-        }
-
-        foreach ($hydrator->updates as [$source, $target]) {
-            $factory
-                ->update($source, $target)
-                ->execute();
-        }
-
-        foreach ($hydrator->deletes as $target) {
-            $factory
-                ->delete($target)
-                ->execute();
-        }
+        $this->log = [
+            'creates' => $runner->runCreates(),
+            'updates' => $runner->runUpdates(),
+            'deletes' => $runner->runDeletes(),
+        ];
     }
 }

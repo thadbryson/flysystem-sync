@@ -4,42 +4,47 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Paths\Traits;
 
-use TCB\FlysystemSync\Paths\Contract;
+use TCB\FlysystemSync\Paths\Contracts\Path as PathContract;
+
+use function ltrim;
 
 trait Path
 {
-    protected readonly string $path;
+    public readonly string $path;
 
-    public function __construct(string $path)
-    {
-        $this->path = trim($path);
+    public readonly ?string $visibility;
+
+    public readonly ?int $last_modified;
+
+    public readonly bool $is_file;
+
+    public readonly bool $is_directory;
+
+    protected function constructSetup(
+        string $path,
+        ?string $visibility,
+        ?int $last_modified,
+        ?bool $is_file
+    ): void {
+        $this->path = ltrim($path, '/');
+
+        $this->visibility    = $visibility;
+        $this->last_modified = $last_modified;
+
+        $this->is_file      = $is_file;
+        $this->is_directory = !$is_file;
     }
 
-    public function isSame(Contract\Path $path): bool
+    /**
+     * @throws \Exception - Must be the same PATH
+     */
+    public function isEqual(PathContract $compare): bool
     {
         return
-            $this->path === $path->path() &&
-            $this->isFile() === $path->isFile() &&
-            $this->isDirectory() === $path->isDirectory();
-    }
-
-    public function path(): string
-    {
-        return $this->path;
-    }
-
-    public function isFile(): bool
-    {
-        return $this instanceof Contract\File;
-    }
-
-    public function isDirectory(): bool
-    {
-        return $this instanceof Contract\Directory;
-    }
-
-    public function isNull(): bool
-    {
-        return $this instanceof Contract\NullPath;
+            $this->path === $compare->path &&
+            $this->last_modified === $compare->last_modified &&
+            $this->visibility === $compare->visibility &&
+            $this->is_file === $compare->is_file &&
+            $this->is_directory === $compare->is_directory;
     }
 }
