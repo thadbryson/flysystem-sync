@@ -32,6 +32,12 @@ readonly class ArrayKeyCompare
         return array_diff_key($this->second, $this->first);
     }
 
+    public function onBoth(): array
+    {
+        // On BOTH but different, leaves first
+        return array_intersect_key($this->first, $this->second);
+    }
+
     public function onBothWhen(callable $comparison): array
     {
         $both = [];
@@ -51,11 +57,5 @@ readonly class ArrayKeyCompare
         }
 
         return $both;
-    }
-
-    public function onBoth(): array
-    {
-        // On BOTH but different, leaves first
-        return array_intersect_key($this->first, $this->second);
     }
 }

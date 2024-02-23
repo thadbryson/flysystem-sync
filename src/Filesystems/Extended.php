@@ -157,6 +157,11 @@ class Extended extends Filesystem
         return $all;
     }
 
+    public function getOrFail(string $path): File|Directory
+    {
+        return $this->get($path) ?? throw new \Exception;
+    }
+
     public function get(string $path): File|Directory|null
     {
         return $this->file($path) ?? $this->directory($path) ?? null;
