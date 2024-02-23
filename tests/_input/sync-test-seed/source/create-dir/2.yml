@@ -1,4 +1,3 @@
-
 config:
-    me: Thad
-    age: 34
+  me: Thad
+  age: 34

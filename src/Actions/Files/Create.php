@@ -12,7 +12,6 @@ readonly class Create
     public function __construct(
         protected Filesystems\Extended $reader,
         protected Filesystems\Extended $writer,
-        protected File $source,
         protected File $target
     ) {
     }
@@ -20,8 +19,8 @@ readonly class Create
     public function execute(): void
     {
         $this->writer->writeStream(
-            $this->source->path,
-            $this->reader->readStream($this->source->path)
+            $this->target->path,
+            $this->reader->readStream($this->target->path)
         );
     }
 

@@ -20,6 +20,19 @@ trait Path
 
     public readonly bool $is_directory;
 
+    /**
+     * @throws \Exception - Must be the same PATH
+     */
+    public function isEqual(PathContract $compare): bool
+    {
+        return
+            $this->path === $compare->path &&
+            $this->last_modified === $compare->last_modified &&
+            $this->visibility === $compare->visibility &&
+            $this->is_file === $compare->is_file &&
+            $this->is_directory === $compare->is_directory;
+    }
+
     protected function constructSetup(
         string $path,
         ?string $visibility,
@@ -33,18 +46,5 @@ trait Path
 
         $this->is_file      = $is_file;
         $this->is_directory = !$is_file;
-    }
-
-    /**
-     * @throws \Exception - Must be the same PATH
-     */
-    public function isEqual(PathContract $compare): bool
-    {
-        return
-            $this->path === $compare->path &&
-            $this->last_modified === $compare->last_modified &&
-            $this->visibility === $compare->visibility &&
-            $this->is_file === $compare->is_file &&
-            $this->is_directory === $compare->is_directory;
     }
 }

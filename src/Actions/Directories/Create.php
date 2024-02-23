@@ -12,18 +12,17 @@ readonly class Create
     public function __construct(
         protected Filesystems\Extended $reader,
         protected Filesystems\Extended $writer,
-        protected Directory $source,
-        protected Directory $target
+        protected Directory $source
     ) {
     }
 
     public function execute(): void
     {
-        $this->writer->createDirectory($this->target->path);
+        $this->writer->createDirectory($this->source->path);
     }
 
     public function isSuccess(): bool
     {
-        return $this->writer->directoryExists($this->target->path);
+        return $this->writer->directoryExists($this->source->path);
     }
 }

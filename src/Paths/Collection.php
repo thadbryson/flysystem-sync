@@ -22,33 +22,6 @@ class Collection
         return $this;
     }
 
-    public function directory(string $directory): static
-    {
-        // Don't add directory contents here.
-        // I want to be able to see what is called in ->file() and ->directory()
-        $this->items['directories'][] = $this->assert($directory);
-
-        return $this;
-    }
-
-    public function getFiles(): array
-    {
-        return $this->items['files'];
-    }
-
-    public function getDirectories(): array
-    {
-        return $this->items['directories'];
-    }
-
-    public function all(): array
-    {
-        return array_merge(
-            $this->items['files'],
-            $this->items['directories']
-        );
-    }
-
     /**
      * Throw \Exception when
      *  - path is an empty string
@@ -74,5 +47,32 @@ class Collection
         }
 
         return $path;
+    }
+
+    public function directory(string $directory): static
+    {
+        // Don't add directory contents here.
+        // I want to be able to see what is called in ->file() and ->directory()
+        $this->items['directories'][] = $this->assert($directory);
+
+        return $this;
+    }
+
+    public function getFiles(): array
+    {
+        return $this->items['files'];
+    }
+
+    public function getDirectories(): array
+    {
+        return $this->items['directories'];
+    }
+
+    public function all(): array
+    {
+        return array_merge(
+            $this->items['files'],
+            $this->items['directories']
+        );
     }
 }

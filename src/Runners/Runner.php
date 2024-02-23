@@ -17,10 +17,6 @@ class Runner
 
     public readonly DirectoryRunner $directory_runner;
 
-    protected readonly Filesystems\Extended $reader;
-
-    protected readonly Filesystems\Extended $writer;
-
     /**
      * @var Path[]
      */
@@ -35,6 +31,10 @@ class Runner
      * @var Path[]
      */
     public readonly array $deletes;
+
+    protected readonly Filesystems\Extended $reader;
+
+    protected readonly Filesystems\Extended $writer;
 
     public function __construct(
         FilesystemAdapter $reader,

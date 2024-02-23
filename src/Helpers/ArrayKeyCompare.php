@@ -7,7 +7,6 @@ namespace TCB\FlysystemSync\Helpers;
 use function array_diff_key;
 use function array_intersect_key;
 use function array_key_exists;
-use function var_dump;
 
 readonly class ArrayKeyCompare
 {
@@ -33,12 +32,6 @@ readonly class ArrayKeyCompare
         return array_diff_key($this->second, $this->first);
     }
 
-    public function onBoth(): array
-    {
-        // On BOTH but different, leaves first
-        return array_intersect_key($this->first, $this->second);
-    }
-
     public function onBothWhen(callable $comparison): array
     {
         $both = [];
@@ -58,5 +51,11 @@ readonly class ArrayKeyCompare
         }
 
         return $both;
+    }
+
+    public function onBoth(): array
+    {
+        // On BOTH but different, leaves first
+        return array_intersect_key($this->first, $this->second);
     }
 }

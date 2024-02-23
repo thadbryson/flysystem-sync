@@ -35,35 +35,9 @@ trait TestTrait
             $this->output);
 
         $source = new Filesystem(new Adapter(__DIR__ . '/../sync-test/source'));
-        $target  = new Filesystem(new Adapter(__DIR__ . '/../sync-test/target'));
+        $target = new Filesystem(new Adapter(__DIR__ . '/../sync-test/target'));
 
         $this->sync = new Sync($source, $target);
-    }
-
-    /**
-     * Copy one dir to another. Uses SPL.
-     */
-    protected function copyDir(string $dir, string $src, string $dest): void
-    {
-        $files = glob("{$dir}/*");
-
-        foreach ($files as $file) {
-
-            $destFile = str_replace($src, $dest, $file);
-
-            if (is_dir($file)) {
-
-                if (!is_dir($destFile)) {
-                    mkdir($destFile, 0755, true);
-                }
-
-                $this->copyDir($file, $src, $dest);
-
-                continue;
-            }
-
-            copy($file, $destFile);
-        }
     }
 
     /**
@@ -74,7 +48,6 @@ trait TestTrait
         $files = glob("{$dir}/*");
 
         foreach ($files as $file) {
-
             if (is_dir($file) === true) {
                 $this->deleteDirectory($file);
 
@@ -84,6 +57,30 @@ trait TestTrait
             }
 
             unlink($file);
+        }
+    }
+
+    /**
+     * Copy one dir to another. Uses SPL.
+     */
+    protected function copyDir(string $dir, string $src, string $dest): void
+    {
+        $files = glob("{$dir}/*");
+
+        foreach ($files as $file) {
+            $destFile = str_replace($src, $dest, $file);
+
+            if (is_dir($file)) {
+                if (!is_dir($destFile)) {
+                    mkdir($destFile, 0755, true);
+                }
+
+                $this->copyDir($file, $src, $dest);
+
+                continue;
+            }
+
+            copy($file, $destFile);
         }
     }
 }

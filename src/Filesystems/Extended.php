@@ -18,9 +18,13 @@ use function implode;
 
 class Extended extends Filesystem
 {
-    public function get(string $path): File | Directory | null
+    /**
+     *
+     * @throws \Exception
+     */
+    public function fileOrFail(string $path): File
     {
-        return $this->file($path) ?? $this->directory($path) ?? null;
+        return $this->file($path) ?? throw new \Exception;
     }
 
     public function file(string $path): ?File
@@ -38,6 +42,15 @@ class Extended extends Filesystem
         );
     }
 
+    /**
+     *
+     * @throws \Exception
+     */
+    public function directoryOrFail(string $path): Directory
+    {
+        return $this->directory($path) ?? throw new \Exception;
+    }
+
     public function directory(string $path): ?Directory
     {
         if ($this->directoryExists($path) === false) {
@@ -49,6 +62,15 @@ class Extended extends Filesystem
             $this->visibility($path),
             $this->lastModified($path),
         );
+    }
+
+    /**
+     *
+     * @throws \Exception
+     */
+    public function directoryContentsOrFail(string $path): array
+    {
+        return $this->directoryContents($path) ?? throw new \Exception;
     }
 
     public function directoryContents(string $path): ?array
@@ -91,30 +113,21 @@ class Extended extends Filesystem
     }
 
     /**
-     *
-     * @throws \Exception
+     * @return File[]|Directory[]
      */
-    public function fileOrFail(string $path): File
+    public function loadOrFail(Path ...$paths): array
     {
-        return $this->file($path) ?? throw new \Exception;
-    }
+        $all   = $this->load(...$paths);
+        $fails = array_keys(
+        // Where path found is NULL
+            array_filter($all, fn (?Path $value): bool => $value === null)
+        );
 
-    /**
-     *
-     * @throws \Exception
-     */
-    public function directoryOrFail(string $path): Directory
-    {
-        return $this->directory($path) ?? throw new \Exception;
-    }
+        if ($fails !== []) {
+            throw new \Exception('Failed to load: ' . implode(', ', $fails));
+        }
 
-    /**
-     *
-     * @throws \Exception
-     */
-    public function directoryContentsOrFail(string $path): array
-    {
-        return $this->directoryContents($path) ?? throw new \Exception;
+        return $all;
     }
 
     /**
@@ -144,21 +157,8 @@ class Extended extends Filesystem
         return $all;
     }
 
-    /**
-     * @return File[]|Directory[]
-     */
-    public function loadOrFail(Path ...$paths): array
+    public function get(string $path): File|Directory|null
     {
-        $all   = $this->load(...$paths);
-        $fails = array_keys(
-        // Where path found is NULL
-            array_filter($all, fn (?Path $value): bool => $value === null)
-        );
-
-        if ($fails !== []) {
-            throw new \Exception('Failed to load: ' . implode(', ', $fails));
-        }
-
-        return $all;
+        return $this->file($path) ?? $this->directory($path) ?? null;
     }
 }
