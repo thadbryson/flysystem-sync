@@ -4,40 +4,23 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\FilesystemAdapter;
-use TCB\FlysystemSync\Paths\Collection;
-use TCB\FlysystemSync\Runners\Runner;
+use League\Flysystem\Filesystem;
+use TCB\FlysystemSync\Helper\FilesystemHelper;
 
-/**
- * @todo
- *      - Logging
- *      - Exception handling with logging
- *      - CLI system
- */
 class Sync
 {
     public readonly Collection $items;
-
-    public array $log = [];
 
     public function __construct()
     {
         $this->items = new Collection;
     }
 
-    public function sync(FilesystemAdapter $reader, FilesystemAdapter $writer): array
+    public function runner(Filesystem $reader, Filesystem $writer): ActionRunner
     {
-        $runner = new Runner(
-            $reader,
-            $writer,
-            $this->items->getFiles(),
-            $this->items->getDirectories()
-        );
+        $sources = FilesystemHelper::loadAllPaths($reader, $this->items->all());    // Load all set paths
+        $targets = FilesystemHelper::loadAllPaths($writer, $sources);               // Find matching targets
 
-        $this->log = [
-            'creates' => $runner->runCreates(),
-            'updates' => $runner->runUpdates(),
-            'deletes' => $runner->runDeletes(),
-        ];
+        return new ActionRunner($reader, $writer, $sources, $targets);
     }
 }
