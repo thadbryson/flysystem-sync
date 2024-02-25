@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Unit\Helper\ActionHelper;
+namespace Tests\Unit\Helper\ActionHelper\Sames\InOrder;
 
 use Codeception\Test\Unit;
 use League\Flysystem\DirectoryAttributes;
@@ -10,7 +10,7 @@ use TCB\FlysystemSync\Helper\ActionHelper;
 
 class OnlyDirectoriesTest extends Unit
 {
-    protected readonly ActionHelper $actions;
+    protected ActionHelper $actions;
 
     public function setUp(): void
     {
@@ -37,24 +37,25 @@ class OnlyDirectoriesTest extends Unit
         $this->actions = new ActionHelper($sources, $targets);
     }
 
-    public function testOnlyFilesGiven(): void
+    public function testNoFiles(): void
     {
-        // No Directories
         $this->assertEquals([], $this->actions->create_files);
         $this->assertEquals([], $this->actions->update_files);
         $this->assertEquals([], $this->actions->delete_files);
+    }
 
+    public function testNoUpdatesAllDirectoriesAreTheSame(): void
+    {
+        $this->assertEquals([], $this->actions->update_directories);
+    }
+
+    public function testOnlyFilesGiven(): void
+    {
         $this->assertEquals([
             'create'           => new DirectoryAttributes('create'),
             'create/where/now' => new DirectoryAttributes('create/where/now'),
             'create-d'         => new DirectoryAttributes('create-d'),
         ], $this->actions->create_directories);
-
-        $this->assertEquals([
-            'update'                     => new DirectoryAttributes('update'),
-            'update3'                    => new DirectoryAttributes('update3'),
-            'update/somewhere/down/here' => new DirectoryAttributes('update/somewhere/down/here'),
-        ], $this->actions->update_directories);
 
         $this->assertEquals([
             'delete/yes/now' => new DirectoryAttributes('delete/yes/now'),

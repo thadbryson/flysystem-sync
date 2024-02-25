@@ -46,58 +46,64 @@ class FilesystemHelper
 
     public static function preparePath(string $path): string
     {
+        $path = trim($path);
+        $path = trim($path, '/');
+
         return (new WhitespacePathNormalizer)->normalizePath($path);
     }
 
+    /**
+     *
+     * @return FileAttributes[]|DirectoryAttributes[]|null[]
+     */
     public static function loadAllPaths(Filesystem $filesystem, array $paths): array
     {
         $all = [];
 
         foreach ($paths as $path) {
-            $all = array_merge($all, static::loadAllPaths($filesystem, $path));
+            $path = static::preparePath($path);
+
+            $all[$path] = static::loadPath($filesystem, $path);
+
+            if ($all[$path] instanceof DirectoryAttributes) {
+                $filesystem
+                    ->listContents($path, FilesystemReader::LIST_DEEP)
+                    ->sortByPath()
+                    ->filter(function (FileAttributes|DirectoryAttributes $content) use (&$all) {
+                        $path_current = static::preparePath($content->path());
+
+                        $all[$path_current] = $content;
+                    });
+            }
         }
 
         return $all;
     }
 
-    protected static function loadPath(Filesystem $filesystem, string $path): array
+    public static function loadPath(Filesystem $filesystem, string $path): FileAttributes|DirectoryAttributes|null
     {
         $path = static::preparePath($path);
 
         // a file?
         if ($filesystem->fileExists($path) === true) {
-            return [
-                $path => new FileAttributes(
-                    $path,
-                    $filesystem->fileSize($path),
-                    $filesystem->visibility($path),
-                    $filesystem->lastModified($path),
-                    $filesystem->mimeType($path),
-                ),
-            ];
+            return new FileAttributes(
+                $path,
+                $filesystem->fileSize($path),
+                $filesystem->visibility($path),
+                $filesystem->lastModified($path),
+                $filesystem->mimeType($path),
+            );
         }
         // a directory?
         elseif ($filesystem->directoryExists($path) === true) {
-            // @todo does this create a duplicate path?
-            $directory = [
-                $path => new DirectoryAttributes(
-                    $path,
-                    $filesystem->visibility($path),
-                    $filesystem->lastModified($path)
-                ),
-            ];
-
-            $filesystem
-                ->listContents($path, FilesystemReader::LIST_DEEP)
-                ->sortByPath()
-                ->filter(function (FileAttributes|DirectoryAttributes $content) use (&$directory) {
-                    $directory[$content->path()] = $content;
-                });
-
-            return $directory;
+            return new DirectoryAttributes(
+                $path,
+                $filesystem->visibility($path),
+                $filesystem->lastModified($path)
+            );
         }
 
         // Not found on filesystem
-        return [];
+        return null;
     }
 }

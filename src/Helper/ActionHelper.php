@@ -10,7 +10,8 @@ use League\Flysystem\FileAttributes;
 use function array_diff_key;
 use function array_filter;
 use function array_intersect_key;
-use function array_values;
+use function gettype;
+use function sprintf;
 
 readonly class ActionHelper
 {
@@ -52,12 +53,12 @@ readonly class ActionHelper
      */
     public function __construct(array $sources, array $targets)
     {
-        $sources = $this->filterNonNulls($sources);
-        $targets = $this->filterNonNulls($targets);
+        $sources = $this->assertStorageAttributes($sources);
+        $targets = $this->assertStorageAttributes($targets);
 
         $creates = array_diff_key($sources, $targets);
         $deletes = array_diff_key($targets, $sources);
-        $updates = $this->filterSames($sources, $targets);
+        $updates = $this->filterDifferents($sources, $targets);
 
         $this->create_files       = $this->filterFiles($creates);
         $this->create_directories = $this->filterDirectories($creates);
@@ -69,15 +70,36 @@ readonly class ActionHelper
         $this->delete_directories = $this->filterDirectories($deletes);
     }
 
-    protected function filterNonNulls(array $params): array
+    protected function assertStorageAttributes(array $array): array
     {
-        return array_filter($params, function (FileAttributes|DirectoryAttributes|null $current): bool {
-            // Filter out NULLs.
-            return $current !== null;
-        });
+        // Remove NULLs
+        $array = array_filter($array, fn (mixed $value): bool => $value !== null);
+
+        // Cannot use array_filter(), need to get the $path key.
+        foreach ($array as $path => $value) {
+            if ($value instanceof FileAttributes === false && $value instanceof DirectoryAttributes === false) {
+                throw new \Exception(sprintf(
+                    'Invalid path "%s", must be object %s or %s, found: %s',
+                    $path,
+                    FileAttributes::class,
+                    DirectoryAttributes::class,
+                    gettype($value)
+                ));
+            }
+
+            // Could be a numeric file/directory path.
+            // Cast $path
+            if ((string) $path !== $value->path()) {
+                throw new \Exception(
+                    sprintf('Paths do not match for key/value pair, "%s" key, "%s" value', $path, $value->path())
+                );
+            }
+        }
+
+        return $array;
     }
 
-    protected function filterSames(array $sources, array $targets): array
+    protected function filterDifferents(array $sources, array $targets): array
     {
         return array_filter(
             array_intersect_key($sources, $targets),
@@ -85,7 +107,7 @@ readonly class ActionHelper
                 // Must use array_key_exists, value could be NULL and isset() or ??  null wouldn't work.
                 $target = $targets[$source->path()] ?? throw new \Exception;
 
-                return FilesystemHelper::isSame($source, $target);
+                return FilesystemHelper::isSame($source, $target) === false;
             }
         );
     }

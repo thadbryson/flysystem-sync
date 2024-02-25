@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Unit\Helper\ActionHelper;
+namespace Tests\Unit\Helper\ActionHelper\Sames\InOrder;
 
 use Codeception\Test\Unit;
 use League\Flysystem\FileAttributes;
@@ -10,7 +10,7 @@ use TCB\FlysystemSync\Helper\ActionHelper;
 
 class OnlyFilesTest extends Unit
 {
-    protected readonly ActionHelper $actions;
+    protected ActionHelper $actions;
 
     public function setUp(): void
     {
@@ -22,7 +22,6 @@ class OnlyFilesTest extends Unit
             'update'               => new FileAttributes('update'),
             'updateA'              => new FileAttributes('updateA'),
             'update/deeper/home/1' => new FileAttributes('update/deeper/home/1'),
-
         ];
 
         $targets = [
@@ -38,6 +37,18 @@ class OnlyFilesTest extends Unit
         $this->actions = new ActionHelper($sources, $targets);
     }
 
+    public function testNoDirectories(): void
+    {
+        $this->assertEquals([], $this->actions->create_directories);
+        $this->assertEquals([], $this->actions->update_directories);
+        $this->assertEquals([], $this->actions->delete_directories);
+    }
+
+    public function testNoUpdatesAllFilesAreTheSame(): void
+    {
+        $this->assertEquals([], $this->actions->update_files);
+    }
+
     public function testOnlyFilesGiven(): void
     {
         $this->assertEquals([
@@ -47,20 +58,9 @@ class OnlyFilesTest extends Unit
         ], $this->actions->create_files);
 
         $this->assertEquals([
-            'update'               => new FileAttributes('update'),
-            'updateA'              => new FileAttributes('updateA'),
-            'update/deeper/home/1' => new FileAttributes('update/deeper/home/1'),
-        ], $this->actions->update_files);
-
-        $this->assertEquals([
             'delete'      => new FileAttributes('delete'),
             'delete1'     => new FileAttributes('delete1'),
             'delete/go/1' => new FileAttributes('delete/go/1'),
         ], $this->actions->delete_files);
-
-        // No Directories
-        $this->assertEquals([], $this->actions->create_directories);
-        $this->assertEquals([], $this->actions->update_directories);
-        $this->assertEquals([], $this->actions->delete_directories);
     }
 }
