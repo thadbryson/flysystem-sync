@@ -45,17 +45,12 @@ readonly class ActionRunner
         // Creates
         return $this->syncInternal(
             $this->actions->create_files,
-            'create',
-            fn (FileAttributes $file) => $this->createFile($file)
-        );
-    }
-
-    public function syncCreateDirectories(): array
-    {
-        return $this->syncInternal(
-            $this->actions->create_directories,
-            'create',
-            fn (DirectoryAttributes $directory) => $this->createDirectory($directory)
+            function (FileAttributes $file): void {
+                $this->writer->writeStream(
+                    $file->path(),
+                    $this->reader->readStream($file->path())
+                );
+            }
         );
     }
 
@@ -63,17 +58,12 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->update_files,
-            'update',
-            fn (FileAttributes $file) => $this->updateFile($file)
-        );
-    }
-
-    public function syncUpdateDirectories(): array
-    {
-        return $this->syncInternal(
-            $this->actions->update_directories,
-            'update',
-            fn (DirectoryAttributes $directory) => $this->updateDirectory($directory)
+            function (FileAttributes $file): void {
+                $this->writer->writeStream(
+                    $file->path(),
+                    $this->reader->readStream($file->path())
+                );
+            }
         );
     }
 
@@ -81,8 +71,29 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->delete_files,
-            'delete',
-            fn (FileAttributes $file) => $this->deleteFile($file)
+            function (FileAttributes $file): void {
+                $this->writer->delete($file->path());
+            }
+        );
+    }
+
+    public function syncCreateDirectories(): array
+    {
+        return $this->syncInternal(
+            $this->actions->create_directories,
+            function (DirectoryAttributes $directory): void {
+                $this->writer->createDirectory($directory->path());
+            }
+        );
+    }
+
+    public function syncUpdateDirectories(): array
+    {
+        return $this->syncInternal(
+            $this->actions->update_directories,
+            function (DirectoryAttributes $directory): void {
+                $this->writer->createDirectory($directory->path());
+            }
         );
     }
 
@@ -90,68 +101,26 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->delete_directories,
-            'delete',
-            fn (DirectoryAttributes $directory) => $this->deleteDirectory($directory)
+            function (DirectoryAttributes $directory): void {
+                $this->writer->deleteDirectory($directory->path());
+            }
         );
     }
 
-    protected function syncInternal(array $batch, string $description, callable $action): array
+    protected function syncInternal(array $batch, callable $action): array
     {
-        return array_map(function (FileAttributes|DirectoryAttributes $current) use ($description, $action) {
-            $result = $action($current);
+        return array_map(function (FileAttributes|DirectoryAttributes $current) use ($action) {
+            $action($current);
+
+            // Get created/updated/deleted object.
+            $result = FilesystemHelper::loadPath($this->writer, $current->path());
 
             return [
-                'action'  => $description,
-                'type'    => $current->type(),
-                'path'    => $current,
-                'result'  => $result,
-                'is_same' => FilesystemHelper::isSame($current, $result),
+                'type'       => $current->type(),
+                'path'       => $current,
+                'result'     => $result,
+                'is_success' => FilesystemHelper::isSame($current, $result),
             ];
         }, $batch);
-    }
-
-    protected function createFile(FileAttributes $file): FileAttributes|DirectoryAttributes|null
-    {
-        $this->writer->writeStream(
-            $file->path(),
-            $this->reader->readStream($file->path())
-        );
-
-        return FilesystemHelper::loadPath($this->writer, $file->path());
-    }
-
-    protected function createDirectory(DirectoryAttributes $directory): FileAttributes|DirectoryAttributes|null
-    {
-        $this->writer->createDirectory($directory->path());
-
-        return FilesystemHelper::loadPath($this->writer, $directory->path());
-    }
-
-    protected function updateFile(FileAttributes $file): FileAttributes|DirectoryAttributes|null
-    {
-        $this->createFile($file);
-
-        return FilesystemHelper::loadPath($this->writer, $file->path());
-    }
-
-    protected function updateDirectory(DirectoryAttributes $directory): FileAttributes|DirectoryAttributes|null
-    {
-        $this->createDirectory($directory);
-
-        return FilesystemHelper::loadPath($this->writer, $directory->path());
-    }
-
-    protected function deleteFile(FileAttributes $file): FileAttributes|DirectoryAttributes|null
-    {
-        $this->writer->delete($file->path());
-
-        return FilesystemHelper::loadPath($this->writer, $file->path());
-    }
-
-    protected function deleteDirectory(DirectoryAttributes $directory): FileAttributes|DirectoryAttributes|null
-    {
-        $this->writer->deleteDirectory($directory->path());
-
-        return FilesystemHelper::loadPath($this->writer, $directory->path());
     }
 }
