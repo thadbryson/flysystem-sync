@@ -5,7 +5,8 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use League\Flysystem\Filesystem;
-use TCB\FlysystemSync\Helper\FilesystemHelper;
+use TCB\FlysystemSync\Action\ActionRunner;
+use TCB\FlysystemSync\Filesystem\FilesystemHelper;
 
 class Sync
 {

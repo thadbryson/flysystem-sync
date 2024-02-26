@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Tests\Unit\Helper\ActionHelper\Diffs\DifferentOrder;
 
 use League\Flysystem\DirectoryAttributes;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 use Tests\Unit\Helper\ActionHelper\Diffs\InOrder\OnlyDirectoriesTest as Extended;
 
 class OnlyDirectoriesTest extends Extended

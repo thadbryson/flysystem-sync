@@ -6,7 +6,7 @@ namespace Tests\Unit\Helper\ActionHelper\Diffs\DifferentOrder;
 
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 use Tests\Unit\Helper\ActionHelper\Diffs\InOrder\AllUpdatesTest as Extended;
 
 class AllUpdatesTest extends Extended

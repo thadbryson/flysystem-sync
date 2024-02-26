@@ -6,7 +6,7 @@ namespace Tests\Unit\Helper\ActionHelper\InvalidValues;
 
 use Codeception\Test\Unit;
 use League\Flysystem\FileAttributes;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 
 class DifferentPathsSetTest extends Unit
 {

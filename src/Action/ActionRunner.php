@@ -2,13 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync;
+namespace TCB\FlysystemSync\Action;
 
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
-use TCB\FlysystemSync\Helper\ActionHelper;
-use TCB\FlysystemSync\Helper\FilesystemHelper;
+use TCB\FlysystemSync\Filesystem\FilesystemHelper;
 
 use function array_map;
 
@@ -29,13 +28,12 @@ readonly class ActionRunner
     public function syncAll(): array
     {
         return [
-            'create_files'       => $this->syncCreateFiles(),
+            'create_files' => $this->syncCreateFiles(),
+            'update_files' => $this->syncUpdateFiles(),
+            'delete_files' => $this->syncDeleteFiles(),
+
             'create_directories' => $this->syncCreateDirectories(),
-
-            'update_files'       => $this->syncUpdateFiles(),
             'update_directories' => $this->syncUpdateDirectories(),
-
-            'delete_files'       => $this->syncDeleteFiles(),
             'delete_directories' => $this->syncDeleteDirectories(),
         ];
     }
@@ -45,11 +43,14 @@ readonly class ActionRunner
         // Creates
         return $this->syncInternal(
             $this->actions->create_files,
-            function (FileAttributes $file): void {
+
+            function (FileAttributes $file): bool {
                 $this->writer->writeStream(
                     $file->path(),
                     $this->reader->readStream($file->path())
                 );
+
+                return true;
             }
         );
     }
@@ -58,11 +59,14 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->update_files,
-            function (FileAttributes $file): void {
+
+            function (FileAttributes $file): bool {
                 $this->writer->writeStream(
                     $file->path(),
                     $this->reader->readStream($file->path())
                 );
+
+                return true;
             }
         );
     }
@@ -71,8 +75,11 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->delete_files,
-            function (FileAttributes $file): void {
+
+            function (FileAttributes $file): bool {
                 $this->writer->delete($file->path());
+
+                return false;
             }
         );
     }
@@ -81,8 +88,11 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->create_directories,
-            function (DirectoryAttributes $directory): void {
+
+            function (DirectoryAttributes $directory): bool {
                 $this->writer->createDirectory($directory->path());
+
+                return true;
             }
         );
     }
@@ -91,8 +101,11 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->update_directories,
-            function (DirectoryAttributes $directory): void {
+
+            function (DirectoryAttributes $directory): bool {
                 $this->writer->createDirectory($directory->path());
+
+                return true;
             }
         );
     }
@@ -101,26 +114,29 @@ readonly class ActionRunner
     {
         return $this->syncInternal(
             $this->actions->delete_directories,
-            function (DirectoryAttributes $directory): void {
+
+            function (DirectoryAttributes $directory): bool {
                 $this->writer->deleteDirectory($directory->path());
+
+                return false;
             }
         );
     }
 
     protected function syncInternal(array $batch, callable $action): array
     {
-        return array_map(function (FileAttributes|DirectoryAttributes $current) use ($action) {
-            $action($current);
+        return array_map(function (FileAttributes|DirectoryAttributes $current) use ($action): ActionResult {
+            // Call action
+            $should_exist = $action($current);
 
             // Get created/updated/deleted object.
             $result = FilesystemHelper::loadPath($this->writer, $current->path());
 
-            return [
-                'type'       => $current->type(),
-                'path'       => $current,
-                'result'     => $result,
-                'is_success' => FilesystemHelper::isSame($current, $result),
-            ];
+            $exists = $current instanceof FileAttributes ?
+                $this->writer->fileExists($current->path()) :
+                $this->writer->directoryExists($current->path());
+
+            return new ActionResult($current, $result, $should_exist, $exists);
         }, $batch);
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Tests\Unit\Helper\ActionHelper\Special;
 
 use Codeception\Test\Unit;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 
 class NullValuesPassedTest extends Unit
 {

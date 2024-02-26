@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Tests\Unit\Helper\ActionHelper\Sames\DifferentOrder;
 
 use League\Flysystem\FileAttributes;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 use Tests\Unit\Helper\ActionHelper\Sames\InOrder\OnlyFilesTest as Extended;
 
 class OnlyFilesTest extends Extended

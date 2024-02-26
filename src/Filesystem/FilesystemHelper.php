@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync\Helper;
+namespace TCB\FlysystemSync\Filesystem;
 
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;

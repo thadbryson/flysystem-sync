@@ -6,7 +6,7 @@ namespace Tests\Unit\Helper\ActionHelper\InvalidValues;
 
 use Codeception\Test\Unit;
 use DateTime;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 
 class InvalidValuesTest extends Unit
 {

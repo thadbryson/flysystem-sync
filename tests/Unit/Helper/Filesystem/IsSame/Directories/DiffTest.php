@@ -6,7 +6,7 @@ namespace Tests\Unit\Helper\Filesystem\IsSame\Directories;
 
 use Codeception\Test\Unit;
 use League\Flysystem\DirectoryAttributes;
-use TCB\FlysystemSync\Helper\FilesystemHelper;
+use TCB\FlysystemSync\Filesystem\FilesystemHelper;
 
 use function time;
 

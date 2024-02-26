@@ -7,7 +7,7 @@ namespace Tests\Unit\Helper\ActionHelper\Special;
 use Codeception\Test\Unit;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
-use TCB\FlysystemSync\Helper\ActionHelper;
+use TCB\FlysystemSync\Action\ActionHelper;
 
 class NumericPathsTest extends Unit
 {

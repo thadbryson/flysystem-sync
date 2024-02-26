@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use TCB\FlysystemSync\Helper\FilesystemHelper;
+use TCB\FlysystemSync\Filesystem\FilesystemHelper;
 
 use function in_array;
 

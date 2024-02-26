@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Tests\Unit\Helper\Filesystem\PreparedPath;
 
 use Codeception\Test\Unit;
-use TCB\FlysystemSync\Helper\FilesystemHelper;
+use TCB\FlysystemSync\Filesystem\FilesystemHelper;
 
 use function sprintf;
 

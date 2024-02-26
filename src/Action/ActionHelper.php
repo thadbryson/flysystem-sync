@@ -2,8 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync\Helper;
+namespace TCB\FlysystemSync\Action;
 
+use TCB\FlysystemSync\Filesystem\FilesystemHelper;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 
