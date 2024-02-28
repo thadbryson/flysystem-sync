@@ -4,20 +4,22 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
-use TCB\FlysystemSync\Filesystem;
+use TCB\FlysystemSync\Action\Actions\Contracts\Action;
 
-readonly class Result
+class Result
 {
-    public bool $is_success;
+    protected Action $action;
 
-    public function __construct(
-        public FileAttributes|DirectoryAttributes $path,
-        public FileAttributes|DirectoryAttributes $result,
-        public bool $should_exist,
-        public bool $exists
-    ) {
-        $this->is_success = Filesystem\Helper::isSame($path, $result);
+    public readonly bool $has_ran;
+
+    public function __construct(Action $action, bool $has_ran)
+    {
+        $this->action  = $action;
+        $this->has_ran = $has_ran;
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this->action->isSuccess();
     }
 }

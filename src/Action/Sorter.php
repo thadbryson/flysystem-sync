@@ -6,6 +6,7 @@ namespace TCB\FlysystemSync\Action;
 
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
+use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Filesystem;
 
 use function array_diff_key;
@@ -48,6 +49,16 @@ readonly class Sorter
     public array $update_directories;
 
     /**
+     * @var FileAttributes[]
+     */
+    public array $nothing_files;
+
+    /**
+     * @var DirectoryAttributes[]
+     */
+    public array $nothing_directories;
+
+    /**
      * @param FileAttributes[]|DirectoryAttributes[]|null[] $sources
      * @param FileAttributes[]|DirectoryAttributes[]|null[] $targets
      * @throws \Exception
@@ -57,18 +68,26 @@ readonly class Sorter
         $sources = $this->assertStorageAttributes($sources);
         $targets = $this->assertStorageAttributes($targets);
 
-        $creates = array_diff_key($sources, $targets);
-        $deletes = array_diff_key($targets, $sources);
-        $updates = $this->filterDifferents($sources, $targets);
+        $creates = array_diff_key($sources, $targets);          // Has sources, no targets
+        $deletes = array_diff_key($targets, $sources);          // Has targets, no sources
 
         $this->create_files       = $this->filterFiles($creates);
         $this->create_directories = $this->filterDirectories($creates);
 
-        $this->update_files       = $this->filterFiles($updates);
-        $this->update_directories = $this->filterDirectories($updates);
-
         $this->delete_files       = $this->filterFiles($deletes);
         $this->delete_directories = $this->filterDirectories($deletes);
+
+        // Has both targets and sources.
+        // Sort through files/directories with and without differences.
+        $updates = $this->filterDifferents($sources, $targets);
+
+        $this->update_files       = $this->filterFiles($updates['diffs']);
+        $this->update_directories = $this->filterDirectories($updates['diffs']);
+
+        // No action needed.
+        // This can be useful for logging.
+        $this->nothing_files       = $this->filterFiles($updates['sames']);
+        $this->nothing_directories = $this->filterDirectories($updates['sames']);
     }
 
     protected function assertStorageAttributes(array $array): array
@@ -78,7 +97,9 @@ readonly class Sorter
 
         // Cannot use array_filter(), need to get the $path key.
         foreach ($array as $path => $value) {
-            if ($value instanceof FileAttributes === false && $value instanceof DirectoryAttributes === false) {
+            if ($value instanceof FileAttributes === false &&
+                $value instanceof DirectoryAttributes === false
+            ) {
                 throw new \Exception(sprintf(
                     'Invalid path "%s", must be object %s or %s, found: %s',
                     $path,
@@ -102,22 +123,29 @@ readonly class Sorter
 
     protected function filterDifferents(array $sources, array $targets): array
     {
-        return array_filter(
-            array_intersect_key($sources, $targets),
-            function (FileAttributes|DirectoryAttributes $source) use ($targets) {
-                // Must use array_key_exists, value could be NULL and isset() or ??  null wouldn't work.
-                $target = $targets[$source->path()] ?? throw new \Exception;
+        $sames = [];
+        $diffs = [];
 
-                return Filesystem\Helper::isSame($source, $target) === false;
-            }
-        );
+        foreach (array_intersect_key($sources, $targets) as $source) {
+            // Must use array_key_exists, value could be NULL and isset() or ??  null wouldn't work.
+            $target = $targets[$source->path()] ?? throw new \Exception;
+
+            Filesystem\Helper::isSame($source, $target) ?
+                $sames[$source->path()] = $source :
+                $diffs[$source->path()] = $source;
+        }
+
+        return [
+            'sames' => $sames,
+            'diffs' => $diffs,
+        ];
     }
 
     protected function filterFiles(array $contents): array
     {
         return array_filter(
             $contents,
-            fn (FileAttributes|DirectoryAttributes $current) => $current instanceof FileAttributes
+            fn (StorageAttributes $current) => $current instanceof FileAttributes
         );
     }
 
@@ -125,7 +153,7 @@ readonly class Sorter
     {
         return array_filter(
             $contents,
-            fn (FileAttributes|DirectoryAttributes $current) => $current instanceof DirectoryAttributes
+            fn (StorageAttributes $current) => $current instanceof DirectoryAttributes
         );
     }
 }

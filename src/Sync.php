@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use League\Flysystem\Filesystem as BaseFilesystem;
-use TCB\FlysystemSync\Filesystem;
 
 class Sync
 {
