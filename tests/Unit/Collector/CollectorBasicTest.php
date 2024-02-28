@@ -4,10 +4,11 @@ declare(strict_types = 1);
 
 namespace Unit\Collector;
 
+use Codeception\Test\Unit;
 use Exception;
 use TCB\FlysystemSync\Collection;
 
-class CollectorBasicTest extends \Codeception\Test\Unit
+class CollectorBasicTest extends Unit
 {
     protected readonly Collection $collection;
 

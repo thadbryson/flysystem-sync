@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use TCB\FlysystemSync\Filesystem\FilesystemHelper;
-
 use function in_array;
 
 class Collection
@@ -17,7 +15,7 @@ class Collection
 
     public function add(string $path): static
     {
-        $path = FilesystemHelper::preparePath($path);
+        $path = Filesystem\Helper::preparePath($path);
 
         // Make sure path isn't already added.
         if ($this->has($path)) {
@@ -31,7 +29,7 @@ class Collection
 
     public function has(string $path): bool
     {
-        $path = FilesystemHelper::preparePath($path);
+        $path = Filesystem\Helper::preparePath($path);
 
         return in_array($path, $this->items, true);
     }

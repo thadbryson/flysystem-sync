@@ -4,9 +4,8 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\Filesystem;
-use TCB\FlysystemSync\Action\ActionRunner;
-use TCB\FlysystemSync\Filesystem\FilesystemHelper;
+use League\Flysystem\Filesystem as BaseFilesystem;
+use TCB\FlysystemSync\Filesystem;
 
 class Sync
 {
@@ -17,11 +16,11 @@ class Sync
         $this->items = new Collection;
     }
 
-    public function runner(Filesystem $reader, Filesystem $writer): ActionRunner
+    public function runner(BaseFilesystem $reader, BaseFilesystem $writer): Action\Runner
     {
-        $sources = FilesystemHelper::loadAllPaths($reader, $this->items->all());    // Load all set paths
-        $targets = FilesystemHelper::loadAllPaths($writer, $sources);               // Find matching targets
+        $sources = Filesystem\Helper::loadAllPaths($reader, $this->items->all());    // Load all set paths
+        $targets = Filesystem\Helper::loadAllPaths($writer, $sources);               // Find matching targets
 
-        return new ActionRunner($reader, $writer, $sources, $targets);
+        return new Action\Runner($reader, $writer, $sources, $targets);
     }
 }
