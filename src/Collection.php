@@ -15,7 +15,7 @@ class Collection
 
     public function add(string $path): static
     {
-        $path = Filesystem\Helper::preparePath($path);
+        $path = Filesystem\HelperFilesystem::preparePath($path);
 
         // Make sure path isn't already added.
         if ($this->has($path)) {
@@ -29,7 +29,7 @@ class Collection
 
     public function has(string $path): bool
     {
-        $path = Filesystem\Helper::preparePath($path);
+        $path = Filesystem\HelperFilesystem::preparePath($path);
 
         return in_array($path, $this->items, true);
     }

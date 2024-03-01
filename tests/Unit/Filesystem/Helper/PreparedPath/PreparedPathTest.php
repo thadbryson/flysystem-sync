@@ -16,7 +16,7 @@ class PreparedPathTest extends Unit
      */
     public function testPaths(string $path, string $expected): void
     {
-        $prepared = Filesystem\Helper::preparePath($path);
+        $prepared = Filesystem\HelperFilesystem::preparePath($path);
 
         $this->assertEquals($expected, $prepared, sprintf('Paths: "%s" -> "%s"', $path, $prepared));
     }
@@ -38,7 +38,7 @@ class PreparedPathTest extends Unit
      */
     public function testNoChanges(string $path): void
     {
-        $prepared = Filesystem\Helper::preparePath($path);
+        $prepared = Filesystem\HelperFilesystem::preparePath($path);
 
         $this->assertEquals($path, $prepared, sprintf('Paths: "%s" -> "%s"', $path, $prepared));
     }

@@ -7,11 +7,23 @@ namespace TCB\FlysystemSync\Filesystem;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\WhitespacePathNormalizer;
 
-class Helper
+use function array_diff;
+
+class HelperFilesystem
 {
+    public static function prepareFilesystem(Filesystem|FilesystemAdapter $adapter): Filesystem
+    {
+        if ($adapter instanceof Filesystem) {
+            return $adapter;
+        }
+
+        return new Filesystem($adapter);
+    }
+
     /**
      * Are these paths the same?
      * Compares: last_modified, visibility, type (file/directory),
@@ -23,25 +35,40 @@ class Helper
         FileAttributes|DirectoryAttributes $source,
         FileAttributes|DirectoryAttributes $target
     ): bool {
-        if ($source->path() !== $target->path()) {
-            throw new \Exception;
+        return static::getDifferences($source, $target) !== [];
+    }
+
+    protected static function toArray(FileAttributes|DirectoryAttributes $path): array
+    {
+        $result = [
+            'type'         => $path instanceof FileAttributes ? 'file' : 'directory',
+            'path'         => $path->path(),
+            'visibility'   => $path->visibility(),
+            'lastModified' => $path->lastModified(),
+        ];
+
+        if ($result['type'] === 'file') {
+            $result['fileSize'] = $path->fileSize();
+            $result['mimeType'] = $path->mimeType();
         }
 
-        // If files, compare filesize and mimetype.
-        if ($source->isFile() &&
-            $target->isFile() &&
-            (
-                $source->fileSize() !== $target->fileSize() ||
-                $source->mimeType() !== $target->mimeType()
+        return $result;
+    }
+
+    public static function getDifferences(
+        FileAttributes|DirectoryAttributes|null $source,
+        FileAttributes|DirectoryAttributes|null $target
+    ): array {
+        return match (true) {
+            $source === null && $target === null => [],
+            $source !== null && $target === null => static::toArray($source),
+            $source === null && $target !== null => static::toArray($target),
+
+            default                              => array_diff(
+                static::toArray($source),
+                static::toArray($target)
             )
-        ) {
-            return false;
-        }
-
-        return
-            $source->lastModified() === $target->lastModified() &&
-            $source->visibility() === $target->visibility() &&
-            $source->type() === $target->type();
+        };
     }
 
     public static function preparePath(string $path): string
@@ -80,7 +107,7 @@ class Helper
         return $all;
     }
 
-    public static function loadPath(Filesystem $filesystem, string $path): FileAttributes|DirectoryAttributes|null
+    public static function loadPath(FilesystemReader $filesystem, string $path): FileAttributes|DirectoryAttributes|null
     {
         $path = static::preparePath($path);
 

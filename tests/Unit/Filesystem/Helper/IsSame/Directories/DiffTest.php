@@ -24,7 +24,7 @@ class DiffTest extends Unit
             $given->lastModified(),
         );
 
-        $this->assertFalse(Filesystem\Helper::isSame($given, $clone));
+        $this->assertFalse(Filesystem\HelperFilesystem::isSame($given, $clone));
 
         $clone = new DirectoryAttributes(
             $given->path(),
@@ -32,7 +32,7 @@ class DiffTest extends Unit
             ($given->lastModified() ?? 0) + 1,
         );
 
-        $this->assertFalse(Filesystem\Helper::isSame($given, $clone));
+        $this->assertFalse(Filesystem\HelperFilesystem::isSame($given, $clone));
     }
 
     /**

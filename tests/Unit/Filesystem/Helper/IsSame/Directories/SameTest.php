@@ -24,7 +24,7 @@ class SameTest extends Unit
             $given->lastModified(),
         );
 
-        $this->assertTrue(Filesystem\Helper::isSame($given, $clone), 'Passed in same variable');
+        $this->assertTrue(Filesystem\HelperFilesystem::isSame($given, $clone), 'Passed in same variable');
     }
 
     /**

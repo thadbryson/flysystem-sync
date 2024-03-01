@@ -11,7 +11,7 @@ class NullValuesPassedTest extends Unit
 {
     public function testNoFiles(): void
     {
-        $actions = new Action\Sorter([
+        $actions = new \TCB\FlysystemSync\Runner\Sorter([
             'update' => null,
             'create' => null,
         ], [

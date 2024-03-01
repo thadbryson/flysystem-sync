@@ -14,18 +14,18 @@ class InvalidValuesTest extends Unit
     public function testInvalidSources(): void
     {
         $this->expectException(Exception::class);
-        new Action\Sorter([new DateTime], []);
+        new \TCB\FlysystemSync\Runner\Sorter([new DateTime], []);
     }
 
     public function testInvalidTargets(): void
     {
         $this->expectException(Exception::class);
-        new Action\Sorter([], [new DateTime]);
+        new \TCB\FlysystemSync\Runner\Sorter([], [new DateTime]);
     }
 
     public function testInvalidSourcesAndTargets(): void
     {
         $this->expectException(Exception::class);
-        new Action\Sorter([new DateTime], [new DateTime]);
+        new \TCB\FlysystemSync\Runner\Sorter([new DateTime], [new DateTime]);
     }
 }

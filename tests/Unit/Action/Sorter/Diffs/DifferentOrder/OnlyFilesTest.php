@@ -31,6 +31,6 @@ class OnlyFilesTest extends Extended
             'delete'      => new FileAttributes('delete', 7, 'priv'),
         ];
 
-        $this->actions = new Action\Sorter($sources, $targets);
+        $this->actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
     }
 }

@@ -9,7 +9,7 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
-use TCB\FlysystemSync\Action\Actions\Directory;
+use TCB\FlysystemSync\Action\Contracts\Directory;
 
 class CreateTest extends Unit
 {
@@ -22,7 +22,7 @@ class CreateTest extends Unit
 
         $directory = new Directory\Create($filesystem, new DirectoryAttributes(__FILE__));
 
-        $this->assertTrue($directory instanceof \TCB\FlysystemSync\Action\Actions\Contracts\Directory);
-        $this->assertTrue($directory instanceof \TCB\FlysystemSync\Action\Actions\Contracts\Action);
+        $this->assertTrue($directory instanceof \TCB\FlysystemSync\Action\Contracts\Contracts\Directory);
+        $this->assertTrue($directory instanceof \TCB\FlysystemSync\Action\Contracts\Contracts\Action);
     }
 }

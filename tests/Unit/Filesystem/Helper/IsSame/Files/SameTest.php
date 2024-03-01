@@ -6,7 +6,7 @@ namespace Tests\Unit\Filesystem\Helper\IsSame\Files;
 
 use Codeception\Test\Unit;
 use League\Flysystem\FileAttributes;
-use TCB\FlysystemSync\Filesystem\Helper;
+use TCB\FlysystemSync\Filesystem\HelperFilesystem;
 
 use function time;
 
@@ -31,7 +31,7 @@ class SameTest extends Unit
             $given->mimeType()
         );
 
-        $this->assertTrue(Helper::isSame($given, $clone), 'Passed in same variable');
+        $this->assertTrue(HelperFilesystem::isSame($given, $clone), 'Passed in same variable');
     }
 
     /**

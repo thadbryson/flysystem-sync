@@ -8,18 +8,18 @@ use League\Flysystem\Filesystem as BaseFilesystem;
 
 class Sync
 {
-    public readonly Collection $items;
+    public readonly Collection $paths;
 
     public function __construct()
     {
-        $this->items = new Collection;
+        $this->paths = new Collection;
     }
 
-    public function runner(BaseFilesystem $reader, BaseFilesystem $writer): Action\Runner
+    public function sync(BaseFilesystem $reader, BaseFilesystem $writer): Runner\Runner
     {
-        $sources = Filesystem\Helper::loadAllPaths($reader, $this->items->all());    // Load all set paths
-        $targets = Filesystem\Helper::loadAllPaths($writer, $sources);               // Find matching targets
+        $sources = Filesystem\HelperFilesystem::loadAllPaths($reader, $this->paths->all());    // Load all set paths
+        $targets = Filesystem\HelperFilesystem::loadAllPaths($writer, $sources);               // Find matching targets
 
-        return new Action\Runner($reader, $writer, $sources, $targets);
+        return new Runner\Runner($reader, $writer, $sources, $targets);
     }
 }

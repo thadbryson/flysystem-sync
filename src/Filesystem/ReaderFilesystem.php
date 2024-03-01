@@ -5,7 +5,8 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Filesystem;
 
 use League\Flysystem\DirectoryListing;
-use League\Flysystem\FilesystemOperator;
+use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 
 /**
@@ -13,13 +14,13 @@ use League\Flysystem\FilesystemReader;
  *
  * No write functionality.
  */
-class Reader implements FilesystemReader
+class ReaderFilesystem implements FilesystemReader
 {
-    protected readonly FilesystemOperator|FilesystemReader $filesystem;
+    protected readonly Filesystem $filesystem;
 
-    public function __construct(FilesystemOperator|FilesystemReader $filesystem)
+    public function __construct(Filesystem|FilesystemAdapter $adapter)
     {
-        $this->filesystem = $filesystem;
+        $this->filesystem = HelperFilesystem::prepareFilesystem($adapter);
     }
 
     public function fileExists(string $location): bool

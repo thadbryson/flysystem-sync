@@ -30,7 +30,7 @@ class NumericPathsTest extends Unit
             55  => new DirectoryAttributes('55', 'true'),
         ];
 
-        $actions = new Action\Sorter($sources, $targets);
+        $actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
 
         $this->assertEquals([
             2 => new FileAttributes('2', 100),

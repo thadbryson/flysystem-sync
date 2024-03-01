@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace TCB\FlysystemSync\Action;
+namespace TCB\FlysystemSync\Runner;
 
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
@@ -15,47 +15,22 @@ use function array_intersect_key;
 use function gettype;
 use function sprintf;
 
-readonly class Sorter
+class Sorter
 {
-    /**
-     * @var FileAttributes[]
-     */
     public array $create_files;
 
-    /**
-     * @var DirectoryAttributes[]
-     */
     public array $create_directories;
 
-    /**
-     *
-     * @var FileAttributes[]
-     */
     public array $delete_files;
 
-    /**
-     * @var DirectoryAttributes[]
-     */
     public array $delete_directories;
 
-    /**
-     * @var FileAttributes[]
-     */
     public array $update_files;
 
-    /**
-     * @var DirectoryAttributes[]
-     */
     public array $update_directories;
 
-    /**
-     * @var FileAttributes[]
-     */
     public array $nothing_files;
 
-    /**
-     * @var DirectoryAttributes[]
-     */
     public array $nothing_directories;
 
     /**
@@ -130,7 +105,7 @@ readonly class Sorter
             // Must use array_key_exists, value could be NULL and isset() or ??  null wouldn't work.
             $target = $targets[$source->path()] ?? throw new \Exception;
 
-            Filesystem\Helper::isSame($source, $target) ?
+            Filesystem\HelperFilesystem::isSame($source, $target) ?
                 $sames[$source->path()] = $source :
                 $diffs[$source->path()] = $source;
         }

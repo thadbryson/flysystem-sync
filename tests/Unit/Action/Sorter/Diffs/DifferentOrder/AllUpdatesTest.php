@@ -35,6 +35,6 @@ class AllUpdatesTest extends Extended
             'update/what/here'     => new FileAttributes('update/what/here', 100),
         ];
 
-        $this->actions = new Action\Sorter($sources, $targets);
+        $this->actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
     }
 }

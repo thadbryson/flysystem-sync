@@ -31,7 +31,7 @@ class DiffTest extends Unit
             $given->mimeType(),
         );
 
-        $this->assertFalse(Filesystem\Helper::isSame($given, $clone));
+        $this->assertFalse(Filesystem\HelperFilesystem::isSame($given, $clone));
 
         $clone = new FileAttributes(
             $given->path(),
@@ -41,7 +41,7 @@ class DiffTest extends Unit
             $given->mimeType(),
         );
 
-        $this->assertFalse(Filesystem\Helper::isSame($given, $clone));
+        $this->assertFalse(Filesystem\HelperFilesystem::isSame($given, $clone));
 
         $clone = new FileAttributes(
             $given->path(),
@@ -51,7 +51,7 @@ class DiffTest extends Unit
             $given->mimeType(),
         );
 
-        $this->assertFalse(Filesystem\Helper::isSame($given, $clone));
+        $this->assertFalse(Filesystem\HelperFilesystem::isSame($given, $clone));
 
         $clone = new FileAttributes(
             $given->path(),
@@ -61,7 +61,7 @@ class DiffTest extends Unit
             ($given->mimeType() ?? 'mime_type') . '_diff'
         );
 
-        $this->assertFalse(Filesystem\Helper::isSame($given, $clone));
+        $this->assertFalse(Filesystem\HelperFilesystem::isSame($given, $clone));
     }
 
     /**
