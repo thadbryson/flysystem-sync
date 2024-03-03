@@ -2,27 +2,27 @@
 
 declare(strict_types = 1);
 
-namespace Tests\Unit\Action\Actions\File;
+namespace Tests\Unit\Action\Actions\Directory;
 
 use Codeception\Test\Unit;
-use TCB\FlysystemSync\Action\File\UpdateFile;
+use TCB\FlysystemSync\Action\Directory\NothingDirectory;
 use Tests\Unit\Action\Actions\ActionTestTrait;
 
 use function ltrim;
 
-class UpdateTest extends Unit
+class NothingTest extends Unit
 {
     use ActionTestTrait;
 
     public function testAttributes(): void
     {
-        $action = new UpdateFile($this->reader, $this->writer, $this->file);
+        $action = new NothingDirectory($this->reader, $this->writer, $this->directory);
 
         // Interfaces it needs.
         $this->assertTrue($action instanceof \TCB\FlysystemSync\Action\Contracts\Action);
-        $this->assertTrue($action instanceof \TCB\FlysystemSync\Action\Contracts\File);
+        $this->assertTrue($action instanceof \TCB\FlysystemSync\Action\Contracts\Directory);
 
-        $this->assertEquals($this->file, $action->path);
+        $this->assertEquals($this->directory, $action->path);
         $this->assertEquals(ltrim(__DIR__, '/'), $action->location);
 
         $this->assertTrue($action->isOnReader());

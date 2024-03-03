@@ -15,6 +15,6 @@ readonly class CreateDirectory implements Directory
 
     public function execute(): void
     {
-        $this->writer->createDirectory($this->path);
+        $this->writer->createDirectory($this->location);
     }
 }

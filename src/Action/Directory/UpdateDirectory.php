@@ -15,9 +15,7 @@ readonly class UpdateDirectory implements Directory
 
     public function execute(): void
     {
-        $delete = new DeleteDirectory($this->reader, $this->writer, $this->directory);
-        $delete->execute();
-
-        $this->writer->createDirectory($this->path);
+        $this->writer->deleteDirectory($this->location);
+        $this->writer->createDirectory($this->location);
     }
 }

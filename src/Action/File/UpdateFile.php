@@ -15,12 +15,10 @@ readonly class UpdateFile implements File
 
     public function execute(): void
     {
-        $delete = new DeleteFile($this->reader, $this->writer, $this->file);
-        $delete->execute();
-
+        $this->writer->delete($this->location);
         $this->writer->writeStream(
-            $this->path,
-            $this->reader->readStream($this->path)
+            $this->location,
+            $this->reader->readStream($this->location)
         );
     }
 }

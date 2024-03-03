@@ -5,18 +5,18 @@ declare(strict_types = 1);
 namespace Tests\Unit\Action\Actions\File;
 
 use Codeception\Test\Unit;
-use TCB\FlysystemSync\Action\File\UpdateFile;
+use TCB\FlysystemSync\Action\File\NothingFile;
 use Tests\Unit\Action\Actions\ActionTestTrait;
 
 use function ltrim;
 
-class UpdateTest extends Unit
+class NothingTest extends Unit
 {
     use ActionTestTrait;
 
     public function testAttributes(): void
     {
-        $action = new UpdateFile($this->reader, $this->writer, $this->file);
+        $action = new NothingFile($this->reader, $this->writer, $this->file);
 
         // Interfaces it needs.
         $this->assertTrue($action instanceof \TCB\FlysystemSync\Action\Contracts\Action);

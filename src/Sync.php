@@ -20,9 +20,6 @@ class Sync
         LeagueFilesystem|FilesystemAdapter $reader,
         LeagueFilesystem|FilesystemAdapter $writer
     ): Runner\Runner {
-        $sources = Filesystem\HelperFilesystem::loadAllPaths($reader, $this->paths->all());    // Load all set paths
-        $targets = Filesystem\HelperFilesystem::loadAllPaths($writer, $sources);               // Find matching targets
-
-        return new Runner\Runner($reader, $writer, $sources, $targets);
+        return new Runner\Runner($reader, $writer, $this->paths->all());
     }
 }

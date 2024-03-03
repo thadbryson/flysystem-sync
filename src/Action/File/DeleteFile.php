@@ -15,6 +15,6 @@ readonly class DeleteFile implements File
 
     public function execute(): void
     {
-        $this->writer->delete($this->path);
+        $this->writer->delete($this->location);
     }
 }

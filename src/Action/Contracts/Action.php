@@ -4,14 +4,17 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action\Contracts;
 
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
+use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
 
 /**
- * @property-read ReaderFilesystem $reader
- * @property-read Filesystem       $writer
+ * @property-read ReaderFilesystem                 $reader
+ * @property-read Filesystem                       $writer
  *
- * @property-read string           $path
+ * @property-read FileAttributes|StorageAttributes $path
+ * @property-read string                           $location
  */
 interface Action
 {
@@ -20,8 +23,6 @@ interface Action
     public function isOnReader(): bool;
 
     public function isOnWriter(): bool;
-
-    public function type(): string;
 
     public function isReaderExistingValid(): bool;
 

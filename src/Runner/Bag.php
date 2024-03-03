@@ -11,9 +11,11 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Action\Directory\CreateDirectory;
 use TCB\FlysystemSync\Action\Directory\DeleteDirectory;
+use TCB\FlysystemSync\Action\Directory\NothingDirectory;
 use TCB\FlysystemSync\Action\Directory\UpdateDirectory;
 use TCB\FlysystemSync\Action\File\CreateFile;
 use TCB\FlysystemSync\Action\File\DeleteFile;
+use TCB\FlysystemSync\Action\File\NothingFile;
 use TCB\FlysystemSync\Action\File\UpdateFile;
 use TCB\FlysystemSync\Filesystem;
 use TCB\FlysystemSync\Filesystem\HelperFilesystem;
@@ -69,8 +71,8 @@ class Bag
         $reader = new ReaderFilesystem($reader);
         $writer = HelperFilesystem::prepareFilesystem($writer);
 
-        $sources = $this->assertStorageAttributes($sources);
-        $targets = $this->assertStorageAttributes($targets);
+        $sources = $this->assertInputs($sources);
+        $targets = $this->assertInputs($targets);
 
         $creates = array_diff_key($sources, $targets);          // Has sources, no targets
         $deletes = array_diff_key($targets, $sources);          // Has targets, no sources
@@ -86,7 +88,7 @@ class Bag
         );
 
         $this->create_directories = array_map(
-            fn (DirectoryAttributes $file) => new CreateDirectory($reader, $writer, $file),
+            fn (DirectoryAttributes $directory) => new CreateDirectory($reader, $writer, $directory),
             $this->onlyDirectories($creates)
         );
 
@@ -97,7 +99,7 @@ class Bag
         );
 
         $this->delete_directories = array_map(
-            fn (DirectoryAttributes $file) => new DeleteDirectory($reader, $writer, $file),
+            fn (DirectoryAttributes $directory) => new DeleteDirectory($reader, $writer, $directory),
             $this->onlyDirectories($deletes)
         );
 
@@ -108,14 +110,21 @@ class Bag
         );
 
         $this->update_directories = array_map(
-            fn (DirectoryAttributes $file) => new UpdateDirectory($reader, $writer, $file),
+            fn (DirectoryAttributes $directory) => new UpdateDirectory($reader, $writer, $directory),
             $this->onlyDirectories($updates['diffs'])
         );
 
         // "Nothings" - no action needed
         // This can be useful for logging.
-        $this->nothing_files       = $this->onlyFiles($updates['sames']);
-        $this->nothing_directories = $this->onlyDirectories($updates['sames']);
+        $this->nothing_files = array_map(
+            fn (FileAttributes $file) => new NothingFile($reader, $writer, $file),
+            $this->onlyFiles($updates['sames'])
+        );
+
+        $this->nothing_directories = array_map(
+            fn (DirectoryAttributes $directory) => new NothingDirectory($reader, $writer, $directory),
+            $this->onlyDirectories($updates['sames'])
+        );
     }
 
     /**
@@ -124,7 +133,7 @@ class Bag
      * ->create_directories
      * etc
      */
-    public function map(callable $callable): void
+    public function map(callable $callable): static
     {
         $this->create_files       = array_map($callable, $this->create_files);
         $this->create_directories = array_map($callable, $this->create_directories);
@@ -134,9 +143,14 @@ class Bag
 
         $this->update_files       = array_map($callable, $this->update_files);
         $this->update_directories = array_map($callable, $this->update_directories);
+
+        $this->nothing_files       = array_map($callable, $this->nothing_files);
+        $this->nothing_directories = array_map($callable, $this->nothing_directories);
+
+        return $this;
     }
 
-    protected function assertStorageAttributes(array $array): array
+    protected function assertInputs(array $array): array
     {
         // Remove NULLs
         $array = array_filter($array, fn (mixed $value): bool => $value !== null);

@@ -15,6 +15,6 @@ readonly class DeleteDirectory implements Directory
 
     public function execute(): void
     {
-        $this->writer->deleteDirectory($this->path);
+        $this->writer->deleteDirectory($this->location);
     }
 }

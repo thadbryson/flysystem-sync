@@ -42,29 +42,13 @@ class HelperFilesystem
         return static::getDifferences($source, $target) !== [];
     }
 
-    protected static function toArray(FileAttributes|DirectoryAttributes $path): array
-    {
-        $result = [
-            'type'         => $path instanceof FileAttributes ? 'file' : 'directory',
-            'path'         => $path->path(),
-            'visibility'   => $path->visibility(),
-            'lastModified' => $path->lastModified(),
-        ];
-
-        if ($result['type'] === 'file') {
-            $result['fileSize'] = $path->fileSize();
-            $result['mimeType'] = $path->mimeType();
-        }
-
-        return $result;
-    }
-
     public static function getDifferences(
         FileAttributes|DirectoryAttributes|null $source,
         FileAttributes|DirectoryAttributes|null $target
     ): array {
         return match (true) {
             $source === null && $target === null => [],
+
             $source !== null && $target === null => static::toArray($source),
             $source === null && $target !== null => static::toArray($target),
 
@@ -73,6 +57,25 @@ class HelperFilesystem
                 static::toArray($target)
             )
         };
+    }
+
+    protected static function toArray(FileAttributes|DirectoryAttributes $path): array
+    {
+        $result = [
+            'path'         => $path->path(),
+            'type'         => $path->type(),
+            'visibility'   => $path->visibility(),
+            'lastModified' => $path->lastModified(),
+            'fileSize'     => null,
+            'mimeType'     => null,
+        ];
+
+        if ($path->isFile() === true) {
+            $result['fileSize'] = $path->fileSize();
+            $result['mimeType'] = $path->mimeType();
+        }
+
+        return $result;
     }
 
     public static function preparePath(string $path): string
@@ -87,7 +90,7 @@ class HelperFilesystem
      *
      * @return FileAttributes[]|DirectoryAttributes[]|null[]
      */
-    public static function loadAllPaths(FilesystemReader $filesystem, array $paths): array
+    public static function loadPathsMany(FilesystemReader $filesystem, array $paths): array
     {
         $all = [];
 

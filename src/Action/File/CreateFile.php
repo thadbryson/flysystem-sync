@@ -16,8 +16,8 @@ readonly class CreateFile implements File
     public function execute(): void
     {
         $this->writer->writeStream(
-            $this->path,
-            $this->reader->readStream($this->path)
+            $this->location,
+            $this->reader->readStream($this->location)
         );
     }
 }

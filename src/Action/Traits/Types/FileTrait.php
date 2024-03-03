@@ -13,25 +13,21 @@ trait FileTrait
     use ActionTrait;
 
     public function __construct(
-        public ReaderFilesystem $reader,
-        public Filesystem $writer,
-        public FileAttributes $file
+        public readonly ReaderFilesystem $reader,
+        public readonly Filesystem $writer,
+        public readonly FileAttributes $file
     ) {
-        $this->path = $this->file->path();
-    }
-
-    public function type(): string
-    {
-        return 'file';
+        $this->path     = $file;
+        $this->location = $file->path();
     }
 
     protected function readerExists(): bool
     {
-        return  $this->reader->fileExists($this->path);
+        return $this->reader->fileExists($this->location);
     }
 
     protected function writerExists(): bool
     {
-        return $this->writer->fileExists($this->path);
+        return $this->writer->fileExists($this->location);
     }
 }

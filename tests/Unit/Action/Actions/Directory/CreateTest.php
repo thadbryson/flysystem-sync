@@ -5,27 +5,27 @@ declare(strict_types = 1);
 namespace Tests\Unit\Action\Actions\Directory;
 
 use Codeception\Test\Unit;
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
-use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
-use TCB\FlysystemSync\Action\Contracts\Directory;
+use TCB\FlysystemSync\Action\Directory\CreateDirectory;
+use Tests\Unit\Action\Actions\ActionTestTrait;
 
-use function dirname;
+use function ltrim;
 
 class CreateTest extends Unit
 {
+    use ActionTestTrait;
+
     public function testAttributes(): void
     {
-        $adapter = new LocalFilesystemAdapter(__DIR__ . '/../../../../_input/sync-test/source/');
-        $adapter = new ReadOnlyFilesystemAdapter($adapter);
-
-        $filesystem = new Filesystem($adapter);
-
-        $directory = new Directory\Create($filesystem, new DirectoryAttributes(__FILE__));
+        $action = new CreateDirectory($this->reader, $this->writer, $this->directory);
 
         // Interfaces it needs.
-        $this->assertTrue($directory instanceof \TCB\FlysystemSync\Action\Contracts\Contracts\Directory);
-        $this->assertTrue($directory instanceof \TCB\FlysystemSync\Action\Contracts\Contracts\Action);
+        $this->assertTrue($action instanceof \TCB\FlysystemSync\Action\Contracts\Action);
+        $this->assertTrue($action instanceof \TCB\FlysystemSync\Action\Contracts\Directory);
+
+        $this->assertEquals($this->directory, $action->path);
+        $this->assertEquals(ltrim(__DIR__, '/'), $action->location);
+
+        $this->assertTrue($action->isOnReader());
+        $this->assertFalse($action->isOnWriter());
     }
 }

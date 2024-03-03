@@ -13,25 +13,21 @@ trait DirectoryTrait
     use ActionTrait;
 
     public function __construct(
-        public ReaderFilesystem $reader,
-        public Filesystem $writer,
-        public DirectoryAttributes $directory
+        public readonly ReaderFilesystem $reader,
+        public readonly Filesystem $writer,
+        DirectoryAttributes $directory
     ) {
-        $this->path = $this->directory->path();
-    }
-
-    public function type(): string
-    {
-        return 'directory';
+        $this->path     = $directory;
+        $this->location = $directory->path();
     }
 
     protected function readerExists(): bool
     {
-        return  $this->reader->directoryExists($this->path);
+        return $this->reader->directoryExists($this->location);
     }
 
     protected function writerExists(): bool
     {
-        return $this->writer->directoryExists($this->path);
+        return $this->writer->directoryExists($this->location);
     }
 }
