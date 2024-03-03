@@ -11,16 +11,32 @@ use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
 /**
  * @property-read ReaderFilesystem reader
  * @property-read Filesystem       writer
- *
- * @property-read string           path
  */
 trait ActionTrait
 {
+    public string $path;
+
+    abstract public function type(): string;
+
+    abstract protected function readerExists(): bool;
+
+    abstract protected function writerExists(): bool;
+
     public function getDifferences(): array
     {
         $source = HelperFilesystem::loadPath($this->reader, $this->path);
         $target = HelperFilesystem::loadPath($this->writer, $this->path);
 
         return HelperFilesystem::getDifferences($source, $target);
+    }
+
+    public function isReaderExistingValid(): bool
+    {
+        return $this->isOnReader() === $this->readerExists();
+    }
+
+    public function isWriterExistingValid(): bool
+    {
+        return $this->isOnWriter() === $this->writerExists();
     }
 }

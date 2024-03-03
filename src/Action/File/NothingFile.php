@@ -5,19 +5,15 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Action\File;
 
 use TCB\FlysystemSync\Action\Contracts\File;
-use TCB\FlysystemSync\Action\Traits\Actions\CreateTrait;
+use TCB\FlysystemSync\Action\Traits\Actions\NothingTrait;
 use TCB\FlysystemSync\Action\Traits\Types\FileTrait;
 
-readonly class CreateFile implements File
+readonly class NothingFile implements File
 {
     use FileTrait,
-        CreateTrait;
+        NothingTrait;
 
     public function execute(): void
     {
-        $this->writer->writeStream(
-            $this->path,
-            $this->reader->readStream($this->path)
-        );
     }
 }

@@ -12,8 +12,6 @@ trait FileTrait
 {
     use ActionTrait;
 
-    public string $path;
-
     public function __construct(
         public ReaderFilesystem $reader,
         public Filesystem $writer,
@@ -27,18 +25,13 @@ trait FileTrait
         return 'file';
     }
 
-    public function isReaderExistingValid(): bool
+    protected function readerExists(): bool
     {
-        return $this->isOnReader() === $this->reader->fileExists($this->path);
+        return  $this->reader->fileExists($this->path);
     }
 
-    public function isWriterExistingValid(): bool
+    protected function writerExists(): bool
     {
-        return $this->isOnWriter() === $this->writer->fileExists($this->path);
-    }
-
-    public function isExpected(): bool
-    {
-        return $this->writer->fileExists($this->path) && $this->getDifferences() === [];
+        return $this->writer->fileExists($this->path);
     }
 }

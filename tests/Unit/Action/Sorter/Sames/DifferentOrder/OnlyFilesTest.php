@@ -32,6 +32,6 @@ class OnlyFilesTest extends Extended
             'update/deeper/home/1' => new FileAttributes('update/deeper/home/1'),
         ];
 
-        $this->actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
+        $this->actions = new \TCB\FlysystemSync\Runner\Bag($sources, $targets);
     }
 }

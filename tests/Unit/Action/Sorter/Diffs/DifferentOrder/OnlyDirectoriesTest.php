@@ -31,6 +31,6 @@ class OnlyDirectoriesTest extends Extended
             'delete'         => new DirectoryAttributes('delete', 'what', 100_000_000),
         ];
 
-        $this->actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
+        $this->actions = new \TCB\FlysystemSync\Runner\Bag($sources, $targets);
     }
 }

@@ -15,7 +15,7 @@ use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
  */
 interface Action
 {
-    public function execute(): static;
+    public function execute(): void;
 
     public function isOnReader(): bool;
 

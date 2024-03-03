@@ -13,6 +13,10 @@ use League\Flysystem\WhitespacePathNormalizer;
 
 use function array_diff;
 
+/**
+ * Helper class for Filesystems.
+ * Does various things with FileAttributes, StorageAttributes, etc.
+ */
 class HelperFilesystem
 {
     public static function prepareFilesystem(Filesystem|FilesystemAdapter $adapter): Filesystem
@@ -83,7 +87,7 @@ class HelperFilesystem
      *
      * @return FileAttributes[]|DirectoryAttributes[]|null[]
      */
-    public static function loadAllPaths(Filesystem $filesystem, array $paths): array
+    public static function loadAllPaths(FilesystemReader $filesystem, array $paths): array
     {
         $all = [];
 

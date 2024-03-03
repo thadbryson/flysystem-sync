@@ -15,7 +15,7 @@ class DifferentPathsSetTest extends Unit
     {
         $this->expectException(Exception::class);
 
-        new \TCB\FlysystemSync\Runner\Sorter(
+        new \TCB\FlysystemSync\Runner\Bag(
             ['path' => new FileAttributes('path-1')],
             ['path' => new FileAttributes('path')]
         );
@@ -25,7 +25,7 @@ class DifferentPathsSetTest extends Unit
     {
         $this->expectException(Exception::class);
 
-        new \TCB\FlysystemSync\Runner\Sorter(
+        new \TCB\FlysystemSync\Runner\Bag(
             ['path' => new FileAttributes('path')],
             ['path' => new FileAttributes('path-diff')]
         );
@@ -35,7 +35,7 @@ class DifferentPathsSetTest extends Unit
     {
         $this->expectException(Exception::class);
 
-        new \TCB\FlysystemSync\Runner\Sorter(
+        new \TCB\FlysystemSync\Runner\Bag(
             ['path' => new FileAttributes('path/')],
             []
         );
@@ -51,7 +51,7 @@ class DifferentPathsSetTest extends Unit
     {
         $this->expectException(Exception::class);
 
-        new \TCB\FlysystemSync\Runner\Sorter(
+        new \TCB\FlysystemSync\Runner\Bag(
             ['path ' => new FileAttributes('path')],
             []
         );

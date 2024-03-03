@@ -13,15 +13,8 @@ readonly class DeleteFile implements File
     use FileTrait,
         DeleteTrait;
 
-    public function execute(): static
+    public function execute(): void
     {
-        $this->writer->delete($this->file->path());
-
-        return $this;
-    }
-
-    public function isExpected(): bool
-    {
-        return $this->writer->fileExists($this->path) === false;
+        $this->writer->delete($this->path);
     }
 }

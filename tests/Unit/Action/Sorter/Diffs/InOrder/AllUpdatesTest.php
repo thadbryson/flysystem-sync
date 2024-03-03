@@ -11,7 +11,7 @@ use TCB\FlysystemSync\Action;
 
 class AllUpdatesTest extends Unit
 {
-    protected \TCB\FlysystemSync\Runner\Sorter $actions;
+    protected \TCB\FlysystemSync\Runner\Bag $actions;
 
     public function setUp(): void
     {
@@ -37,7 +37,7 @@ class AllUpdatesTest extends Unit
             'update/what/here'     => new FileAttributes('update/what/here', 100),
         ];
 
-        $this->actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
+        $this->actions = new \TCB\FlysystemSync\Runner\Bag($sources, $targets);
     }
 
     public function testNoCreatesOrDeletes(): void

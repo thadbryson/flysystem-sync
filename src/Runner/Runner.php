@@ -6,27 +6,18 @@ namespace TCB\FlysystemSync\Runner;
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Action\Contracts\Action;
-use TCB\FlysystemSync\Action\Directory\CreateDirectory;
-use TCB\FlysystemSync\Action\Directory\DeleteDirectory;
-use TCB\FlysystemSync\Action\Directory\UpdateDirectory;
-use TCB\FlysystemSync\Action\File\CreateFile;
-use TCB\FlysystemSync\Action\File\DeleteFile;
-use TCB\FlysystemSync\Action\File\UpdateFile;
-use TCB\FlysystemSync\Filesystem\HelperFilesystem;
-use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
 
-use function array_map;
 use function ucfirst;
 
-readonly class Runner
+/**
+ * Runs all the Actions
+ */
+class Runner
 {
-    public ReaderFilesystem $reader;
+    public readonly Bag $bag;
 
-    public Filesystem $writer;
-
-    public Sorter $bag;
+    public bool $has_ran = false;
 
     public function __construct(
         Filesystem|FilesystemAdapter $reader,
@@ -34,75 +25,77 @@ readonly class Runner
         array $sources,
         array $targets
     ) {
-        $this->reader = new ReaderFilesystem($reader);
-        $this->writer = HelperFilesystem::prepareFilesystem($writer);
-
-        // Run actions
-        $sorter = new Sorter($sources, $targets);
-
-        // ->execute() all the Actions
-        $sorter->create_files = $this->runActions(CreateFile::class, $sorter->create_files);
-        $sorter->update_files = $this->runActions(UpdateFile::class, $sorter->update_files);
-        $sorter->delete_files = $this->runActions(DeleteFile::class, $sorter->delete_files);
-
-        $sorter->create_directories = $this->runActions(CreateDirectory::class, $sorter->create_directories);
-        $sorter->update_directories = $this->runActions(UpdateDirectory::class, $sorter->update_directories);
-        $sorter->delete_directories = $this->runActions(DeleteDirectory::class, $sorter->delete_directories);
-
-        // Verify the results
-        // IMPORTANT: must be verified after all actions are finished running!
-        // @todo - need this code
-
-        $this->bag = $sorter;
+        // Hold 8 arrays for create/update/delete/nothing of each type file/directory
+        // All actions on those 6 different arrays. Just data for the "nothings".
+        $this->bag = new Bag($reader, $writer, $sources, $targets);
     }
 
-    protected function runActions(string $class_action, array $batch): array
+    public function execute(): void
     {
-        return array_map(
+        if ($this->has_ran === true) {
+            throw new \Exception('->execute() has already ran.');
+        }
 
-            function (StorageAttributes $attributes) use ($class_action): array {
-                // Build the Action
-                /** @var Action $action */
-                $action = new $class_action($this->reader, $this->writer, $attributes);
+        // BEFORE actions
+        // Gather
+        $this->bag->map(function (Action $action): array {
+            // Set Result, Differences
+            return [
+                'action'      => $action,
+                'errors'      => $this->getErrorsBeforeAction($action),
+                'differences' => [
+                    'before' => $action->getDifferences(),
+                ],
+            ];
+        });
 
-                // Get any errors.
-                $errors = $this->getErrorsActionBefore($action);
+        // Execute all Actions
+        $this->bag->map(function (array $result): array {
+            $result['has_ran']    = false;
+            $result['has_errors'] = $result['errors'] !== [];
 
-                if ($errors === []) {
-                    $action->execute();
+            // No errors?
+            // ->execute() the Action
+            if ($result['has_errors'] === false) {
+                $result['action']->execute();
+                $result['has_ran'] = true;
+            }
 
-                    $result = Result::make();
-                }
-                else {
-                    $result = Result::withErrors($errors);
-                }
+            // Get the differences after the Action
+            $result['differences']['after'] = $result['action']->getDifferences();
 
-                // Set Result, Differences
-                return [
-                    'result'      => $result,
-                    'differences' => $action->getDifferences(),
-                ];
-            },
+            // Set Result, Differences
+            return $result;
+        });
 
-            $batch
-        );
+        // AFTER actions
+
+        // Get differences after ALL ACTIONS HAVE RAN.
+        $this->bag->map(function (array $current): array {
+            $current['differences']['finished'] = $current['action']->getDifferences();
+
+            return $current;
+        });
+
+        // Set has_ran flag so we can't ->execute() again.
+        $this->has_ran = true;
     }
 
-    protected function getErrorsActionBefore(Action $action): array
+    protected function getErrorsBeforeAction(Action $action): array
     {
         $errors = [];
         $type   = ucfirst($action->type());
 
         if ($action->isReaderExistingValid() === false) {
             $errors[] = $action->isOnReader() ?
-                $type . ' must not on the READER' :
-                $type . ' cannot exist on the READER';
+                "{$type} must exist on the READER. It does not" :
+                "{$type} cannot exist on the READER";
         }
 
         if ($action->isWriterExistingValid() === false) {
             $errors[] = $action->isOnWriter() ?
-                $type . ' must not on the WRITER' :
-                $type . ' cannot exist on the WRITER';
+                "{$type} must exist on the WRITER. It does not" :
+                "{$type} cannot exist on the WRITER";
         }
 
         return $errors;

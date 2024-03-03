@@ -13,11 +13,11 @@ readonly class UpdateDirectory implements Directory
     use DirectoryTrait,
         UpdateTrait;
 
-    public function execute(): static
+    public function execute(): void
     {
-        $this->writer->deleteDirectory($this->directory->path());
-        $this->writer->createDirectory($this->directory->path());
+        $delete = new DeleteDirectory($this->reader, $this->writer, $this->directory);
+        $delete->execute();
 
-        return $this;
+        $this->writer->createDirectory($this->path);
     }
 }

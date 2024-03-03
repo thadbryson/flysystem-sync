@@ -23,7 +23,7 @@ class LargeArraysNoDiffsTest extends Unit
             };
         }
 
-        $actions = new \TCB\FlysystemSync\Runner\Sorter($array, $array);
+        $actions = new \TCB\FlysystemSync\Runner\Bag($array, $array);
 
         $this->assertEquals([], $actions->create_files);
         $this->assertEquals([], $actions->update_files);

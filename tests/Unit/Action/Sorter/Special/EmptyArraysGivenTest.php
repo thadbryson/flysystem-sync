@@ -11,7 +11,7 @@ class EmptyArraysGivenTest extends Unit
 {
     public function testNoFiles(): void
     {
-        $actions = new \TCB\FlysystemSync\Runner\Sorter([], []);
+        $actions = new \TCB\FlysystemSync\Runner\Bag([], []);
 
         $this->assertEquals([], $actions->create_files);
         $this->assertEquals([], $actions->update_files);

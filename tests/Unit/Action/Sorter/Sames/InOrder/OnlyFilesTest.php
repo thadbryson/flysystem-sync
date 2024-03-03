@@ -10,7 +10,7 @@ use TCB\FlysystemSync\Action;
 
 class OnlyFilesTest extends Unit
 {
-    protected \TCB\FlysystemSync\Runner\Sorter $actions;
+    protected \TCB\FlysystemSync\Runner\Bag $actions;
 
     public function setUp(): void
     {
@@ -34,7 +34,7 @@ class OnlyFilesTest extends Unit
             'delete'      => new FileAttributes('delete'),
         ];
 
-        $this->actions = new \TCB\FlysystemSync\Runner\Sorter($sources, $targets);
+        $this->actions = new \TCB\FlysystemSync\Runner\Bag($sources, $targets);
     }
 
     public function testNoDirectories(): void

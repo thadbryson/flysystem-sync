@@ -4,7 +4,8 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\Filesystem as BaseFilesystem;
+use League\Flysystem\Filesystem as LeagueFilesystem;
+use League\Flysystem\FilesystemAdapter;
 
 class Sync
 {
@@ -15,8 +16,10 @@ class Sync
         $this->paths = new Collection;
     }
 
-    public function sync(BaseFilesystem $reader, BaseFilesystem $writer): Runner\Runner
-    {
+    public function sync(
+        LeagueFilesystem|FilesystemAdapter $reader,
+        LeagueFilesystem|FilesystemAdapter $writer
+    ): Runner\Runner {
         $sources = Filesystem\HelperFilesystem::loadAllPaths($reader, $this->paths->all());    // Load all set paths
         $targets = Filesystem\HelperFilesystem::loadAllPaths($writer, $sources);               // Find matching targets
 

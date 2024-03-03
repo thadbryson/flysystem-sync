@@ -10,12 +10,15 @@ use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 
 /**
- * Only Filesystem functions for reading.
+ * Only Filesystem reading functions.
  *
  * No write functionality.
  */
 class ReaderFilesystem implements FilesystemReader
 {
+    /**
+     * Performs Filesystem operations.
+     */
     protected readonly Filesystem $filesystem;
 
     public function __construct(Filesystem|FilesystemAdapter $adapter)

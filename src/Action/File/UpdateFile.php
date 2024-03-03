@@ -13,16 +13,14 @@ readonly class UpdateFile implements File
     use FileTrait,
         UpdateTrait;
 
-    public function execute(): static
+    public function execute(): void
     {
-        $location = $this->file->path();
+        $delete = new DeleteFile($this->reader, $this->writer, $this->file);
+        $delete->execute();
 
-        $this->writer->delete($location);
         $this->writer->writeStream(
-            $location,
-            $this->reader->readStream($location)
+            $this->path,
+            $this->reader->readStream($this->path)
         );
-
-        return $this;
     }
 }

@@ -13,10 +13,8 @@ readonly class CreateDirectory implements Directory
     use DirectoryTrait,
         CreateTrait;
 
-    public function execute(): static
+    public function execute(): void
     {
-        $this->writer->createDirectory($this->directory->path());
-
-        return $this;
+        $this->writer->createDirectory($this->path);
     }
 }

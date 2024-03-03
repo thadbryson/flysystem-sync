@@ -5,16 +5,15 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Action\Directory;
 
 use TCB\FlysystemSync\Action\Contracts\Directory;
-use TCB\FlysystemSync\Action\Traits\Actions\DeleteTrait;
+use TCB\FlysystemSync\Action\Traits\Actions\NothingTrait;
 use TCB\FlysystemSync\Action\Traits\Types\DirectoryTrait;
 
-readonly class DeleteDirectory implements Directory
+readonly class NothingDirectory implements Directory
 {
     use DirectoryTrait,
-        DeleteTrait;
+        NothingTrait;
 
     public function execute(): void
     {
-        $this->writer->deleteDirectory($this->path);
     }
 }
