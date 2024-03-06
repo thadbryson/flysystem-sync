@@ -6,15 +6,15 @@ namespace Unit\Collector;
 
 use Codeception\Test\Unit;
 use Exception;
-use TCB\FlysystemSync\Collection;
+use TCB\FlysystemSync\Collections\PathCollection;
 
 class CollectorBasicTest extends Unit
 {
-    protected readonly Collection $collection;
+    protected readonly PathCollection $collection;
 
     public function setUp(): void
     {
-        $collection = new Collection;
+        $collection = new PathCollection;
         $collection
             ->add('/path1')         // left-trim will convert to "path1"
             ->add('/////path2/////')

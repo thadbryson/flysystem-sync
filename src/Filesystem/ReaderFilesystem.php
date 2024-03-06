@@ -8,6 +8,7 @@ use League\Flysystem\DirectoryListing;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
+use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
 
 /**
  * Only Filesystem reading functions.
@@ -19,11 +20,13 @@ class ReaderFilesystem implements FilesystemReader
     /**
      * Performs Filesystem operations.
      */
-    protected readonly Filesystem $filesystem;
+    private readonly Filesystem $filesystem;
 
-    public function __construct(Filesystem|FilesystemAdapter $adapter)
+    public function __construct(FilesystemAdapter $adapter)
     {
-        $this->filesystem = HelperFilesystem::prepareFilesystem($adapter);
+        $adapter = new ReadOnlyFilesystemAdapter($adapter);
+
+        return new Filesystem($adapter);
     }
 
     public function fileExists(string $location): bool

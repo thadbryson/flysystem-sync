@@ -4,21 +4,33 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Filesystem;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\FilesystemReader;
+use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
 use League\Flysystem\WhitespacePathNormalizer;
+use TCB\FlysystemSync\Path\Directory;
+use TCB\FlysystemSync\Path\File;
 
 use function array_diff;
+use function trim;
 
 /**
  * Helper class for Filesystems.
- * Does various things with FileAttributes, StorageAttributes, etc.
+ * Does various things with File, Directory, etc.
  */
 class HelperFilesystem
 {
+    public static function prepareReader(FilesystemAdapter|ReaderFilesystem $reader): ReaderFilesystem
+    {
+        if ($reader instanceof ReaderFilesystem) {
+            return $reader;
+        }
+
+        $reader = new ReadOnlyFilesystemAdapter($reader);
+
+        return new ReaderFilesystem($reader);
+    }
+
     public static function prepareFilesystem(Filesystem|FilesystemAdapter $adapter): Filesystem
     {
         if ($adapter instanceof Filesystem) {
@@ -26,56 +38,6 @@ class HelperFilesystem
         }
 
         return new Filesystem($adapter);
-    }
-
-    /**
-     * Are these paths the same?
-     * Compares: last_modified, visibility, type (file/directory),
-     *  if files compares file_size and mime_type
-     *
-     * @throws \Exception - Different path strings
-     */
-    public static function isSame(
-        FileAttributes|DirectoryAttributes $source,
-        FileAttributes|DirectoryAttributes $target
-    ): bool {
-        return static::getDifferences($source, $target) !== [];
-    }
-
-    public static function getDifferences(
-        FileAttributes|DirectoryAttributes|null $source,
-        FileAttributes|DirectoryAttributes|null $target
-    ): array {
-        return match (true) {
-            $source === null && $target === null => [],
-
-            $source !== null && $target === null => static::toArray($source),
-            $source === null && $target !== null => static::toArray($target),
-
-            default                              => array_diff(
-                static::toArray($source),
-                static::toArray($target)
-            )
-        };
-    }
-
-    protected static function toArray(FileAttributes|DirectoryAttributes $path): array
-    {
-        $result = [
-            'path'         => $path->path(),
-            'type'         => $path->type(),
-            'visibility'   => $path->visibility(),
-            'lastModified' => $path->lastModified(),
-            'fileSize'     => null,
-            'mimeType'     => null,
-        ];
-
-        if ($path->isFile() === true) {
-            $result['fileSize'] = $path->fileSize();
-            $result['mimeType'] = $path->mimeType();
-        }
-
-        return $result;
     }
 
     public static function preparePath(string $path): string
@@ -86,58 +48,58 @@ class HelperFilesystem
         return (new WhitespacePathNormalizer)->normalizePath($path);
     }
 
-    /**
-     *
-     * @return FileAttributes[]|DirectoryAttributes[]|null[]
-     */
-    public static function loadPathsMany(FilesystemReader $filesystem, array $paths): array
+    public static function isValidType(mixed $value, bool $is_file): bool
     {
-        $all = [];
-
-        foreach ($paths as $path) {
-            $path = static::preparePath($path);
-
-            $all[$path] = static::loadPath($filesystem, $path);
-
-            if ($all[$path] instanceof DirectoryAttributes) {
-                $filesystem
-                    ->listContents($path, FilesystemReader::LIST_DEEP)
-                    ->sortByPath()
-                    ->filter(function (FileAttributes|DirectoryAttributes $content) use (&$all) {
-                        $path_current = static::preparePath($content->path());
-
-                        $all[$path_current] = $content;
-                    });
-            }
-        }
-
-        return $all;
+        return $is_file ?
+            $value instanceof File :
+            $value instanceof Directory;
     }
 
-    public static function loadPath(FilesystemReader $filesystem, string $path): FileAttributes|DirectoryAttributes|null
+    /**
+     * Are these paths the same?
+     * Compares: last_modified, visibility, type (file/directory),
+     *  if files compares file_size and mime_type
+     *
+     * @throws \Exception - Different path strings
+     */
+    public static function isSame(
+        File|Directory $source,
+        File|Directory $target
+    ): bool {
+        return static::getDifferences($source, $target) !== [];
+    }
+
+    public static function getDifferences(
+        File|Directory|null $source,
+        File|Directory|null $target
+    ): array {
+        return match (true) {
+            $source === null && $target === null => [],
+
+            $source !== null && $target === null => $source->toArray(),
+            $source === null && $target !== null => $target->toArray(),
+
+            default                              => array_diff(
+                $source->toArray(),
+                $target->toArray()
+            )
+        };
+    }
+
+    private static function toArray(File|Directory $path): array
     {
-        $path = static::preparePath($path);
+        $result = [
+            'path'         => $path->path,
+            'type'         => $path->type,
+            'visibility'   => $path->visibility,
+            'lastModified' => $path->lastModified,
+        ];
 
-        // a file?
-        if ($filesystem->fileExists($path) === true) {
-            return new FileAttributes(
-                $path,
-                $filesystem->fileSize($path),
-                $filesystem->visibility($path),
-                $filesystem->lastModified($path),
-                $filesystem->mimeType($path),
-            );
-        }
-        // a directory?
-        elseif ($filesystem->directoryExists($path) === true) {
-            return new DirectoryAttributes(
-                $path,
-                $filesystem->visibility($path),
-                $filesystem->lastModified($path)
-            );
+        if ($path->is_file === true) {
+            $result['fileSize'] = $path->fileSize;
+            $result['mimeType'] = $path->mimeType;
         }
 
-        // Not found on filesystem
-        return null;
+        return $result;
     }
 }

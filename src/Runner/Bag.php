@@ -4,29 +4,24 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Runner;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem as LeagueFilesystem;
-use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Action\Directory\CreateDirectory;
-use TCB\FlysystemSync\Action\Directory\DeleteDirectory;
-use TCB\FlysystemSync\Action\Directory\NothingDirectory;
-use TCB\FlysystemSync\Action\Directory\UpdateDirectory;
-use TCB\FlysystemSync\Action\File\CreateFile;
-use TCB\FlysystemSync\Action\File\DeleteFile;
-use TCB\FlysystemSync\Action\File\NothingFile;
-use TCB\FlysystemSync\Action\File\UpdateFile;
-use TCB\FlysystemSync\Filesystem;
+use League\Flysystem\Filesystem;
+use TCB\FlysystemSync\Action\Directory\CreateDirectoryAction;
+use TCB\FlysystemSync\Action\Directory\DeleteDirectoryAction;
+use TCB\FlysystemSync\Action\Directory\NothingDirectoryAction;
+use TCB\FlysystemSync\Action\Directory\UpdateDirectoryAction;
+use TCB\FlysystemSync\Action\File\CreateFileAction;
+use TCB\FlysystemSync\Action\File\DeleteFileAction;
+use TCB\FlysystemSync\Action\File\NothingFileAction;
+use TCB\FlysystemSync\Action\File\UpdateFileAction;
 use TCB\FlysystemSync\Filesystem\HelperFilesystem;
 use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
+use TCB\FlysystemSync\Path\Directory;
+use TCB\FlysystemSync\Path\File;
 
 use function array_diff_key;
 use function array_filter;
 use function array_intersect_key;
 use function array_map;
-use function gettype;
-use function sprintf;
 
 /**
  * Contains Action objects for each type (File, Directory) and
@@ -58,24 +53,18 @@ class Bag
     public array $nothing_directories;
 
     /**
-     * @param FileAttributes[]|DirectoryAttributes[]|null[] $sources
-     * @param FileAttributes[]|DirectoryAttributes[]|null[] $targets
-     * @throws \Exception
+     * @param File[]|Directory[] $sources
+     * @param File[]|Directory[] $targets
      */
     public function __construct(
-        LeagueFilesystem|FilesystemAdapter $reader,
-        LeagueFilesystem|FilesystemAdapter $writer,
         array $sources,
         array $targets
     ) {
-        $reader = new ReaderFilesystem($reader);
-        $writer = HelperFilesystem::prepareFilesystem($writer);
+        $sources = array_filter($sources, fn (mixed $value): bool => $value !== null);
+        $targets = array_filter($targets, fn (mixed $value): bool => $value !== null);
 
-        $sources = $this->assertInputs($sources);
-        $targets = $this->assertInputs($targets);
-
-        $creates = array_diff_key($sources, $targets);          // Has sources, no targets
-        $deletes = array_diff_key($targets, $sources);          // Has targets, no sources
+        $creates = array_diff_key($sources, $targets);  // Has sources, no targets
+        $deletes = array_diff_key($targets, $sources);  // Has targets, no sources
 
         // Has both targets and sources.
         // Sort through files/directories with and without differences.
@@ -83,46 +72,46 @@ class Bag
 
         // Creates
         $this->create_files = array_map(
-            fn (FileAttributes $file) => new CreateFile($reader, $writer, $file),
+            fn (File $file) => new CreateFileAction($file),
             $this->onlyFiles($creates)
         );
 
         $this->create_directories = array_map(
-            fn (DirectoryAttributes $directory) => new CreateDirectory($reader, $writer, $directory),
+            fn (Directory $directory) => new CreateDirectoryAction($directory),
             $this->onlyDirectories($creates)
         );
 
         // Deletes
         $this->delete_files = array_map(
-            fn (FileAttributes $file) => new DeleteFile($reader, $writer, $file),
+            fn (File $file) => new DeleteFileAction($file),
             $this->onlyFiles($deletes)
         );
 
         $this->delete_directories = array_map(
-            fn (DirectoryAttributes $directory) => new DeleteDirectory($reader, $writer, $directory),
+            fn (Directory $directory) => new DeleteDirectoryAction($directory),
             $this->onlyDirectories($deletes)
         );
 
         // Updates
         $this->update_files = array_map(
-            fn (FileAttributes $file) => new UpdateFile($reader, $writer, $file),
+            fn (File $file) => new UpdateFileAction($file),
             $this->onlyFiles($updates['diffs'])
         );
 
         $this->update_directories = array_map(
-            fn (DirectoryAttributes $directory) => new UpdateDirectory($reader, $writer, $directory),
+            fn (Directory $directory) => new UpdateDirectoryAction($directory),
             $this->onlyDirectories($updates['diffs'])
         );
 
         // "Nothings" - no action needed
         // This can be useful for logging.
         $this->nothing_files = array_map(
-            fn (FileAttributes $file) => new NothingFile($reader, $writer, $file),
+            fn (File $file) => new NothingFileAction($file),
             $this->onlyFiles($updates['sames'])
         );
 
         $this->nothing_directories = array_map(
-            fn (DirectoryAttributes $directory) => new NothingDirectory($reader, $writer, $directory),
+            fn (Directory $directory) => new NothingDirectoryAction($directory),
             $this->onlyDirectories($updates['sames'])
         );
     }
@@ -150,47 +139,13 @@ class Bag
         return $this;
     }
 
-    protected function assertInputs(array $array): array
-    {
-        // Remove NULLs
-        $array = array_filter($array, fn (mixed $value): bool => $value !== null);
-
-        // Cannot use array_filter(), need to get the $path key.
-        foreach ($array as $path => $value) {
-            // Must be either FileAttributes or DirectoryAttributes
-            if ($value instanceof FileAttributes === false &&
-                $value instanceof DirectoryAttributes === false
-            ) {
-                throw new \Exception(sprintf(
-                    'Invalid path "%s", must be object %s or %s, found: %s',
-                    $path,
-                    FileAttributes::class,
-                    DirectoryAttributes::class,
-                    gettype($value)
-                ));
-            }
-
-            // Paths have to equal.
-
-            // Could be a numeric file/directory path.
-            // Cast $path
-            if ((string) $path !== $value->path()) {
-                throw new \Exception(
-                    sprintf('Paths do not match for key/value pair, "%s" key, "%s" value', $path, $value->path())
-                );
-            }
-        }
-
-        return $array;
-    }
-
     /**
      * Get updates from SOURCES and TARGETS.
      * Then separate them into "sames" (same files/dirs) and "diffs" (files/dirs have differences).
      *
      * @throws \Exception
      */
-    protected function separateDifferents(array $sources, array $targets): array
+    private function separateDifferents(array $sources, array $targets): array
     {
         $sames = [];
         $diffs = [];
@@ -201,7 +156,7 @@ class Bag
             // Must use array_key_exists, value could be NULL and isset() or ??  null wouldn't work.
             $target = $targets[$source->path()] ?? throw new \Exception;
 
-            Filesystem\HelperFilesystem::isSame($source, $target) ?
+            HelperFilesystem::isSame($source, $target) ?
                 $sames[$source->path()] = $source :
                 $diffs[$source->path()] = $source;
         }
@@ -212,19 +167,19 @@ class Bag
         ];
     }
 
-    protected function onlyFiles(array $contents): array
+    private function onlyFiles(array $contents): array
     {
         return array_filter(
             $contents,
-            fn (StorageAttributes $current) => $current instanceof FileAttributes
+            fn (File|Directory $current) => $current instanceof File
         );
     }
 
-    protected function onlyDirectories(array $contents): array
+    private function onlyDirectories(array $contents): array
     {
         return array_filter(
             $contents,
-            fn (StorageAttributes $current) => $current instanceof DirectoryAttributes
+            fn (File|Directory $current) => $current instanceof Directory
         );
     }
 }

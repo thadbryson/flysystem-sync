@@ -7,64 +7,68 @@ namespace TCB\FlysystemSync\Runner;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
 use TCB\FlysystemSync\Action\Contracts\Action;
-use TCB\FlysystemSync\Filesystem\HelperFilesystem;
+use TCB\FlysystemSync\Collections\PathCollection;
+use TCB\FlysystemSync\Filesystem\Loader;
+use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
+use TCB\FlysystemSync\Runner\Results\ActionResult;
 
 /**
  * Runs all the Actions
  */
-class Runner
+readonly class Runner
 {
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $create_files;
+    public array $create_files;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $create_directories;
+    public array $create_directories;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $delete_files;
+    public array $delete_files;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $delete_directories;
+    public array $delete_directories;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $update_files;
+    public array $update_files;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $update_directories;
+    public array $update_directories;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $nothing_files;
+    public array $nothing_files;
 
     /**
      * @var ResultBuilder[]
      */
-    public readonly array $nothing_directories;
+    public array $nothing_directories;
 
+    /**
+     */
     public function __construct(
-        Filesystem|FilesystemAdapter $reader,
-        Filesystem|FilesystemAdapter $writer,
-        array $paths,
+        ReaderFilesystem $reader,
+        FilesystemAdapter $writer,
+        PathCollection $sources,
     ) {
-        $sources = HelperFilesystem::loadPathsMany($reader, $paths);    // Load all set paths
-        $targets = HelperFilesystem::loadPathsMany($writer, $sources);  // Find matching targets
+        $targets = $sources->clone($writer);
 
         // Hold 8 arrays for create/update/delete/nothing of each type file/directory
         // All actions on those 6 different arrays. Just data for the "nothings".
-        $bag = new Bag($reader, $writer, $sources, $targets);
+        $bag = new Bag($sources->found(), $targets->found());
         $bag
             // Get any errors and differences for each PATH.
             ->map(function (Action $action): ResultBuilder {
@@ -72,12 +76,12 @@ class Runner
             })
 
             // Execute all Actions
-            ->map(function (ResultBuilder $result): ResultBuilder {
-                return $result->execute();
+            ->map(function (ResultBuilder $result) use ($reader, $writer): ResultBuilder {
+                return $result->execute($reader, $writer);
             })
 
             // AFTER ALL the Actions ran, then we get the differences, and other things.
-            ->map(function (ResultBuilder $result): Result {
+            ->map(function (ResultBuilder $result): ActionResult {
                 return $result->finalize();
             });
 

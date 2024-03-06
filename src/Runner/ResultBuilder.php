@@ -4,46 +4,50 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Runner;
 
+use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemAdapter;
 use TCB\FlysystemSync\Action\Contracts\Action;
+use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
+use TCB\FlysystemSync\Runner\Results\ActionResult;
 
 class ResultBuilder
 {
-    protected readonly Action $action;
+    private readonly Action $action;
 
     /**
      * Has the Action been executed ->execute() ?
      */
-    protected bool $has_executed = false;
+    private bool $has_executed = false;
 
     /**
      * Any errors BEFORE any executions
      */
-    protected array $errors_before_any = [];
+    private array $errors_before_any = [];
 
     /**
      * Any errors BEFORE execution
      */
-    protected array $errors_before = [];
+    private array $errors_before = [];
 
     /**
      * Any errors AFTER execution
      */
-    protected array $errors_after = [];
+    private array $errors_after = [];
 
     /**
      * PATH differences BEFORE any executions
      */
-    protected array $differences_before_any = [];
+    private array $differences_before_any = [];
 
     /**
      * PATH differences BEFORE exection
      */
-    protected array $differences_before = [];
+    private array $differences_before = [];
 
     /**
      * PATH differences AFTER execution
      */
-    protected array $differences_after = [];
+    private array $differences_after = [];
 
     public function __construct(Action $action)
     {
@@ -53,14 +57,14 @@ class ResultBuilder
         $this->errors_before_any      = $this->getErrors();
     }
 
-    public function execute(): static
+    public function execute(ReaderFilesystem $reader, FilesystemAdapter $writer): static
     {
         $this->differences_before = $this->action->getDifferences();
         $this->errors_before      = $this->getErrors();
 
         // Has not execute and has 0 errors
         if ($this->has_executed === false && $this->errors_before_any === []) {
-            $this->action->execute();
+            $this->action->execute($reader, new Filesystem($writer));
 
             $this->has_executed = true;
         }
@@ -71,9 +75,9 @@ class ResultBuilder
         return $this;
     }
 
-    public function finalize(): Result
+    public function finalize(): ActionResult
     {
-        return new Result(
+        return new ActionResult(
             $this->action,
             $this->has_executed,
             $this->errors_before_any,
@@ -86,7 +90,7 @@ class ResultBuilder
         );
     }
 
-    protected function getErrors(): array
+    private function getErrors(): array
     {
         $errors = [];
 

@@ -4,10 +4,9 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action\Traits\Types;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use TCB\FlysystemSync\Filesystem\HelperFilesystem;
+use TCB\FlysystemSync\Filesystem\Loader;
 use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
 
 /**
@@ -16,29 +15,25 @@ use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
  */
 trait ActionTrait
 {
-    public readonly FileAttributes|DirectoryAttributes $path;
+    abstract private function readerExists(): bool;
 
-    public readonly string $location;
-    
-    abstract protected function readerExists(): bool;
-
-    abstract protected function writerExists(): bool;
+    abstract private function writerExists(): bool;
 
     public function getDifferences(): array
     {
-        $source = HelperFilesystem::loadPath($this->reader, $this->location);
-        $target = HelperFilesystem::loadPath($this->writer, $this->location);
+        $source = Loader::loadPath($reader, $this->path->path);
+        $target = Loader::loadPath($writer, $this->path->path);
 
         return HelperFilesystem::getDifferences($source, $target);
     }
 
     public function isReaderExistingValid(): bool
     {
-        return $this->isOnReader() === $this->readerExists();
+        return $this->isOnReader() === $readerExists();
     }
 
     public function isWriterExistingValid(): bool
     {
-        return $this->isOnWriter() === $this->writerExists();
+        return $this->isOnWriter() === $writerExists();
     }
 }

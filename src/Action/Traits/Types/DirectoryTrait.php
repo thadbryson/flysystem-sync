@@ -4,30 +4,24 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action\Traits\Types;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\Filesystem;
-use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
+use TCB\FlysystemSync\Path\Directory;
 
 trait DirectoryTrait
 {
     use ActionTrait;
 
     public function __construct(
-        public readonly ReaderFilesystem $reader,
-        public readonly Filesystem $writer,
-        DirectoryAttributes $directory
+        public readonly Directory $path
     ) {
-        $this->path     = $directory;
-        $this->location = $directory->path();
     }
 
-    protected function readerExists(): bool
+    private function readerExists(): bool
     {
-        return $this->reader->directoryExists($this->location);
+        return $reader->directoryExists($this->path->path);
     }
 
-    protected function writerExists(): bool
+    private function writerExists(): bool
     {
-        return $this->writer->directoryExists($this->location);
+        return $writer->directoryExists($this->path->path);
     }
 }
