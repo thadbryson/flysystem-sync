@@ -5,35 +5,28 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Path;
 
 use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\StorageAttributes;
 
-use function trim;
-
-class Directory
+class Directory extends AbstractPath
 {
-    public readonly string $path;
-
-    public readonly string $type;
-
-    public readonly bool $is_file;
-
-    public readonly bool $is_directory;
-
     public function __construct(
         string $path,
-        public readonly ?string $visibility = null,
-        public readonly ?int $lastModified = null
+        ?bool $exists = false,
+        ?string $visibility = null,
+        ?int $lastModified = null
     ) {
-        $this->path = trim(trim($path), '/');
-
-        $this->type         = 'directory';
-        $this->is_file      = false;
-        $this->is_directory = true;
+        parent::__construct($path, $exists, $visibility, $lastModified, false, true);
     }
 
-    public static function fromAttributes(DirectoryAttributes $attributes): static
+    public static function fromAttributes(StorageAttributes $attributes, ?bool $exists = null): Directory
     {
+        if ($attributes instanceof DirectoryAttributes === false) {
+            throw new \Exception('');
+        }
+
         return new static(
             $attributes->path(),
+            $exists,
             $attributes->visibility(),
             $attributes->lastModified()
         );
@@ -43,6 +36,7 @@ class Directory
     {
         return [
             'path'         => $this->path,
+            'exists'       => $this->exists,
             'type'         => $this->type,
             'visibility'   => $this->visibility,
             'lastModified' => $this->lastModified,

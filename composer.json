@@ -26,7 +26,10 @@
     "autoload":          {
         "psr-4": {
             "TCB\\FlysystemSync\\": "src/"
-        }
+        },
+        "files": [
+            "src-functions/helper.php"
+        ]
     },
     "autoload-dev":      {
         "psr-4": {

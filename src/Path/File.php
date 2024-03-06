@@ -5,41 +5,40 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Path;
 
 use League\Flysystem\FileAttributes;
+use League\Flysystem\StorageAttributes;
 
-use function array_diff;
-use function trim;
-
-class File
+class File extends AbstractPath
 {
-    public readonly string $path;
+    public readonly ?int $fileSize;
 
-    public readonly string $type;
-
-    public readonly bool $is_file;
-
-    public readonly bool $is_directory;
+    public readonly ?string $mimeType;
 
     public function __construct(
         string $path,
-        public readonly ?int $fileSize = null,
-        public readonly ?string $visibility = null,
-        public readonly ?int $lastModified = null,
-        public readonly ?string $mimeType = null
+        ?bool $exists = false,
+        ?string $visibility = null,
+        ?int $lastModified = null,
+        ?int $fileSize = null,
+        ?string $mimeType = null
     ) {
-        $this->path = trim(trim($path), '/');
+        parent::__construct($path, $exists, $visibility, $lastModified, true, false);
 
-        $this->type         = 'file';
-        $this->is_file      = true;
-        $this->is_directory = false;
+        $this->fileSize = $fileSize;
+        $this->mimeType = $mimeType;
     }
 
-    public static function fromAttributes(FileAttributes $attributes): static
+    public static function fromAttributes(StorageAttributes $attributes, ?bool $exists = null): File
     {
+        if ($attributes instanceof FileAttributes === false) {
+            throw new \Exception('');
+        }
+
         return new static(
             $attributes->path(),
-            $attributes->fileSize(),
+            $exists,
             $attributes->visibility(),
             $attributes->lastModified(),
+            $attributes->fileSize(),
             $attributes->mimeType()
         );
     }
@@ -48,10 +47,11 @@ class File
     {
         return [
             'path'         => $this->path,
+            'exists'       => $this->exists,
             'type'         => $this->type,
-            'fileSize'     => $this->fileSize,
             'visibility'   => $this->visibility,
             'lastModified' => $this->lastModified,
+            'fileSize'     => $this->fileSize,
             'mimeType'     => $this->mimeType,
         ];
     }

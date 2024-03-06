@@ -6,8 +6,8 @@ namespace TCB\FlysystemSync\Action\Traits\Types;
 
 use League\Flysystem\Filesystem;
 use TCB\FlysystemSync\Filesystem\HelperFilesystem;
-use TCB\FlysystemSync\Filesystem\Loader;
 use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
+use TCB\FlysystemSync\Filesystem\Traits\LoaderTrait;
 
 /**
  * @property-read ReaderFilesystem reader
@@ -21,8 +21,8 @@ trait ActionTrait
 
     public function getDifferences(): array
     {
-        $source = Loader::loadPath($reader, $this->path->path);
-        $target = Loader::loadPath($writer, $this->path->path);
+        $source = LoaderTrait::loadPath($reader, $this->path->path);
+        $target = LoaderTrait::loadPath($writer, $this->path->path);
 
         return HelperFilesystem::getDifferences($source, $target);
     }

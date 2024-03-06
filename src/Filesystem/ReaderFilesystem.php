@@ -9,6 +9,7 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
 use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
+use TCB\FlysystemSync\Filesystem\Traits\LoaderTrait;
 
 /**
  * Only Filesystem reading functions.
@@ -17,65 +18,67 @@ use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
  */
 class ReaderFilesystem implements FilesystemReader
 {
+    use LoaderTrait;
+    
     /**
      * Performs Filesystem operations.
      */
-    private readonly Filesystem $filesystem;
+    protected readonly Filesystem $reader;
 
     public function __construct(FilesystemAdapter $adapter)
     {
         $adapter = new ReadOnlyFilesystemAdapter($adapter);
 
-        return new Filesystem($adapter);
+        $this->reader = new Filesystem($adapter);
     }
 
     public function fileExists(string $location): bool
     {
-        return $this->filesystem->fileExists($location);
+        return $this->reader->fileExists($location);
     }
 
     public function directoryExists(string $location): bool
     {
-        return $this->filesystem->directoryExists($location);
+        return $this->reader->directoryExists($location);
     }
 
     public function has(string $location): bool
     {
-        return $this->filesystem->has($location);
+        return $this->reader->has($location);
     }
 
     public function read(string $location): string
     {
-        return $this->filesystem->read($location);
+        return $this->reader->read($location);
     }
 
     public function readStream(string $location)
     {
-        return $this->filesystem->readStream($location);
+        return $this->reader->readStream($location);
     }
 
     public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
     {
-        return $this->filesystem->listContents($location, $deep);
+        return $this->reader->listContents($location, $deep);
     }
 
     public function lastModified(string $path): int
     {
-        return $this->filesystem->lastModified($path);
+        return $this->reader->lastModified($path);
     }
 
     public function fileSize(string $path): int
     {
-        return $this->filesystem->fileSize($path);
+        return $this->reader->fileSize($path);
     }
 
     public function mimeType(string $path): string
     {
-        return $this->filesystem->mimeType($path);
+        return $this->reader->mimeType($path);
     }
 
     public function visibility(string $path): string
     {
-        return $this->filesystem->visibility($path);
+        return $this->reader->visibility($path);
     }
 }

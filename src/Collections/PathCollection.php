@@ -5,24 +5,27 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync\Collections;
 
 use League\Flysystem\FilesystemAdapter;
-use TCB\FlysystemSync\Filesystem\HelperFilesystem;
-use TCB\FlysystemSync\Filesystem\Loader;
 use TCB\FlysystemSync\Filesystem\ReaderFilesystem;
 use TCB\FlysystemSync\Path\Directory;
 use TCB\FlysystemSync\Path\File;
 use Throwable;
 
-use function array_key_exists;
 use function array_keys;
+use function TCB\FlysystemSync\Functions\Helper\path_collect;
 
 class PathCollection
 {
     /**
-     * @var Log[]
+     * @var File[]|Directory[]|null[]
      */
-    private array $items = [];
+    protected array $items = [];
 
-    private readonly ReaderFilesystem $reader;
+    /**
+     * @var Throwable[]
+     */
+    protected array $exceptions = [];
+
+    protected readonly ReaderFilesystem $reader;
 
     public function __construct(FilesystemAdapter $reader)
     {
@@ -32,17 +35,21 @@ class PathCollection
     /**
      * Clone with another Filesystem.
      */
-    public function clone(FilesystemAdapter $reader): static
+    public function factory(FilesystemAdapter $reader): static
     {
-        $cloned = new static($reader);
+        $product = new static($reader);
+        $product->path(...$this->paths());
 
-        foreach ($this->items as $current) {
-            $current->expecting_file ?
-                $cloned->file($current->path) :
-                $cloned->directory($current->path);
-        }
+        return $product;
+    }
 
-        return $cloned;
+    /**
+     * Clone with another Filesystem.
+     */
+    public function combine(self $targets): static
+    {
+        $sources = $this->all();
+        $targets = $targets->all();
     }
 
     public function paths(): array
@@ -50,72 +57,48 @@ class PathCollection
         return array_keys($this->items);
     }
 
-    public function found(): array
+    public function all(): array
     {
-        return array_map(fn (Log $log) => $log->found, $this->items);
+        return $this->items;
     }
 
-    public function isCollected(string $path): bool
+    public function exceptions(): array
     {
-        return array_key_exists(
-            HelperFilesystem::preparePath($path),
-            $this->items
-        );
+        return $this->exceptions;
     }
 
-    public function file(string $path): void
+    public function file(string ...$paths): static
     {
-        $found = Loader::loadPath($this->reader, $path);
-
-        try {
-            $this->addInternal($found->path, true, $found, null);
-        }
-        catch (Throwable $exception) {
-            $this->addInternal($found->path, true, null, $exception);
-        }
+        return $this->set($paths, true);
     }
 
-    public function directory(string $path): void
+    public function directory(string ...$paths): static
     {
-        $found = Loader::loadPath($this->reader, $path);
-
-        try {
-            // Need out add outside it's loaded contents below.
-            // The directory could be empty and it wouldn't be in the contents.
-            $this->addInternal($found->path, false, $found, null);
-            $this->directoryContents($found->path);
-        }
-        catch (Throwable $exception) {
-            $this->addInternal($found->path, false, null, $exception);
-        }
+        return $this->set($paths, false);
     }
 
-    protected function directoryContents(string $directory): void
+    public function path(string ...$paths): static
     {
-        $contents = Loader::loadPathsDeep($this->reader, [$directory]);
+        return $this->set($paths, null);
+    }
 
-        foreach ($contents as $content) {
+    protected function set(array $paths, ?bool $is_file): static
+    {
+        foreach ($paths as $path) {
             try {
-                $this->addInternal($content->path, $content->is_file, $content, null);
+                $found = match ($is_file) {
+                    true  => $this->reader->loadFile($path),
+                    false => $this->reader->loadDirectory($path),
+                    null  => $this->reader->load($path) ?? throw new \Exception('Not found')
+                };
+
+                path_collect($this->items, $path, $found);
             }
             catch (Throwable $exception) {
-                $this->addInternal($content->path, $content->is_file, null, $exception);
+                $this->exceptions[$path] = $exception;
             }
         }
-    }
 
-    private function addInternal(
-        string $path,
-        bool $is_file,
-        File|Directory|null $found,
-        Throwable|null $exception
-    ): void {
-        $this->items[$path] = new Log(
-            $path,
-            $found,
-            $is_file,
-            $this->isCollected($path),
-            $exception
-        );
+        return $this;
     }
 }
