@@ -4,6 +4,6 @@
 
 actor: UnitTester
 modules:
-  enabled:
-    - Asserts
+    enabled:
+        - Asserts
 step_decorators: ~

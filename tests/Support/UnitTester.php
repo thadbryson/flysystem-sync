@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Tests\Support;
-
-use Codeception\Actor;
 
 /**
  * Inherited Methods
@@ -20,8 +18,8 @@ use Codeception\Actor;
  * @method void pause($vars = [])
  *
  * @SuppressWarnings(PHPMD)
- */
-class UnitTester extends Actor
+*/
+class UnitTester extends \Codeception\Actor
 {
     use _generated\UnitTesterActions;
 

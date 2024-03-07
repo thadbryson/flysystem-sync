@@ -4,14 +4,15 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Filesystem\Traits;
 
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemReader;
-use TCB\FlysystemSync\Path\AbstractPath;
 use TCB\FlysystemSync\Path\Directory;
 use TCB\FlysystemSync\Path\File;
 
-use function TCB\FlysystemSync\Functions\Helper\path_collect;
-use function TCB\FlysystemSync\Functions\Helper\path_prepare_many;
+use function TCB\FlysystemSync\Functions\path_collect;
+use function TCB\FlysystemSync\Functions\path_prepare_many;
 
 /**
  * @mixin Filesystem
@@ -45,7 +46,6 @@ trait LoaderTrait
         return match (true) {
             $this->fileExists($path)      => new File(
                 $path,
-                true,
                 $this->visibility($path),
                 $this->lastModified($path),
                 $this->fileSize($path),
@@ -54,7 +54,6 @@ trait LoaderTrait
 
             $this->directoryExists($path) => new Directory(
                 $path,
-                true,
                 $this->visibility($path),
                 $this->lastModified($path)
             ),
@@ -71,21 +70,25 @@ trait LoaderTrait
         $all   = [];
         $paths = path_prepare_many(...$paths);
 
-        foreach ($paths as $current_path) {
-            path_collect($all, $current_path, $this->load($current_path));
+        foreach ($paths as $current) {
+            $current = path_collect($all, $this->load($current));
 
             // Get DIRECTORY contents?
-            if ($all[$current_path] !== null && $all[$current_path]->is_directory) {
-                $contents = $this->listContents($current_path, FilesystemReader::LIST_DEEP);
-
-                // Iterate through DIRECTORY contents, key by PATH.
-                // Cannot use ->map()->toArray() because it doesn't set PATH keys.
-                foreach ($contents as $current_content) {
-                    $content_current = AbstractPath::fromAttributes($current_content, true);
-
-                    path_collect($all, $current_content->path, $content_current);
-                }
+            if ($current === null || $current->is_directory === false) {
+                continue;
             }
+
+            $this
+                ->listContents($current->path, FilesystemReader::LIST_DEEP)
+                ->sortByPath()
+                ->filter(function (FileAttributes|DirectoryAttributes $attributes) use (&$all) {
+                    path_collect(
+                        $all,
+                        $attributes->isFile() ?
+                            File::fromFileAttributes($attributes) :
+                            Directory::fromDirectoryAttributes($attributes)
+                    );
+                });
         }
 
         return $all;
