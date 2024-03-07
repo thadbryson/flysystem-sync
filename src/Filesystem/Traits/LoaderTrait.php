@@ -74,7 +74,7 @@ trait LoaderTrait
             $current = path_collect($all, $this->load($current));
 
             // Get DIRECTORY contents?
-            if ($current === null || $current->is_directory === false) {
+            if ($current === null || $current->isFile()) {
                 continue;
             }
 

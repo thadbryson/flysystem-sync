@@ -4,11 +4,12 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use TCB\FlysystemSync\Action\Contracts\Action;
+use TCB\FlysystemSync\Action\Contracts;
 use TCB\FlysystemSync\Action\CreateDirectory;
 use TCB\FlysystemSync\Action\CreateFile;
 use TCB\FlysystemSync\Action\DeleteDirectory;
 use TCB\FlysystemSync\Action\DeleteFile;
+use TCB\FlysystemSync\Action\Enums\ActionEnum;
 use TCB\FlysystemSync\Action\NothingDirectory;
 use TCB\FlysystemSync\Action\NothingFile;
 use TCB\FlysystemSync\Action\UpdateDirectory;
@@ -18,76 +19,60 @@ use TCB\FlysystemSync\Path\File;
 
 class Factory
 {
-    public function action(File|Directory|null $source, File|Directory|null $target): Action
+    public function action(File|Directory|null $source, File|Directory|null $target): Contracts\Action
     {
-        // Both can't be NULL.
-        // Should be impossible.
-        if ($source === null && $target === null) {
-            throw new \InvalidArgumentException('');
-        }
+        $type = ActionEnum::getType($source, $target);
 
-        // only SOURCE -> create TARGET
-        if ($source !== null && $target === null) {
-            return $source->isFile() ?
-                $this->createFile($source) :
-                $this->createDirectory($source);
-        }
-        // no SOURCE -> delete TARGET
-        elseif ($source === null && $target !== null) {
-            return $target->isFile() ?
-                $this->deleteFile($target) :
-                $this->deleteDirectory($target);
-        }
-        // Has SOURCE and TARGET but different
-        elseif ($source->isDifferent($target)) {
-            return $source->isFile() ?
-                $this->updateFile($source, $target) :
-                $this->updateDirectory($source, $target);
-        }
+        return match ($type) {
+            ActionEnum::CREATE_DIRECTORY  => $this->createDirectory($source),
+            ActionEnum::DELETE_DIRECTORY  => $this->deleteDirectory($source),
+            ActionEnum::UPDATE_DIRECTORY  => $this->updateDirectory($source),
+            ActionEnum::NOTHING_DIRECTORY => $this->nothingDirectory($source),
 
-        // Same properties
-        return $source->isFile() ?
-            $this->nothingFile($source, $target) :
-            $this->nothingDirectory($source, $target);
+            ActionEnum::CREATE_FILE       => $this->createFile($source),
+            ActionEnum::DELETE_FILE       => $this->deleteFile($source),
+            ActionEnum::UPDATE_FILE       => $this->updateFile($source),
+            ActionEnum::NOTHING_FILE      => $this->nothingFile($source),
+        };
     }
 
-    protected function createFile(File $target): Action
+    protected function createDirectory(Directory $source): Contracts\CreateDirectory
     {
-        return new CreateFile($target);
+        return new CreateDirectory($source);
     }
 
-    protected function deleteFile(File $target): Action
+    protected function createFile(File $source): Contracts\CreateFile
     {
-        return new DeleteFile($target);
+        return new CreateFile($source);
     }
 
-    protected function updateFile(File $source, File|Directory $target): Action
-    {
-        return new UpdateFile($source, $target);
-    }
-
-    protected function nothingFile(File $source, File|Directory $target): Action
-    {
-        return new NothingFile($source, $target);
-    }
-
-    protected function createDirectory(Directory $target): Action
-    {
-        return new CreateDirectory($target);
-    }
-
-    protected function deleteDirectory(Directory $target): Action
+    protected function deleteDirectory(Directory $target): Contracts\DeleteDirectory
     {
         return new DeleteDirectory($target);
     }
 
-    protected function updateDirectory(Directory $source, File|Directory $target): Action
+    protected function deleteFile(File $target): Contracts\DeleteFile
     {
-        return new UpdateDirectory($source, $target);
+        return new DeleteFile($target);
     }
 
-    protected function nothingDirectory(Directory $source, File|Directory $target): Action
+    protected function updateDirectory(Directory $source): Contracts\UpdateDirectory
     {
-        return new NothingDirectory($source, $target);
+        return new UpdateDirectory($source);
+    }
+
+    protected function updateFile(File $source): Contracts\UpdateFile
+    {
+        return new UpdateFile($source);
+    }
+
+    protected function nothingDirectory(Directory $source): Contracts\NothingDirectory
+    {
+        return new NothingDirectory($source);
+    }
+
+    protected function nothingFile(File $source): Contracts\NothingFile
+    {
+        return new NothingFile($source);
     }
 }

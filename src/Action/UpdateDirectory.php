@@ -4,32 +4,28 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action;
 
-use League\Flysystem\StorageAttributes;
-use TCB\FlysystemSync\Action\Contracts\Action;
 use TCB\FlysystemSync\Filesystem\Reader;
 use TCB\FlysystemSync\Filesystem\Writer;
 use TCB\FlysystemSync\Path\Directory;
 use TCB\FlysystemSync\Path\File;
 
-readonly class UpdateDirectory implements Action
+readonly class UpdateDirectory implements Contracts\UpdateDirectory
 {
-    public array $differences;
+    public bool $needs_creation;
 
     public function __construct(
         public Directory $source,
-        public File|Directory $target
+        File|Directory $target
     ) {
-        $this->differences = $this->source->getDifferences($this->target);
+        $this->needs_creation = $this->source->isDifferentProperties($target);
     }
 
     public function __invoke(Reader $reader, Writer $writer): void
     {
-        foreach ($this->differences as $property => $value) {
-            match ($property) {
-                StorageAttributes::ATTRIBUTE_VISIBILITY => $writer->setVisibility($this->target->path, $value),
-
-                default                                 => null
-            };
+        if ($this->needs_creation) {
+            $writer->createDirectory($this->source->path);
         }
+
+        $writer->setVisibility($this->source->path, $this->source->visibility);
     }
 }

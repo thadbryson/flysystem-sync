@@ -4,16 +4,16 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action;
 
-use TCB\FlysystemSync\Action\Contracts\Action;
 use TCB\FlysystemSync\Filesystem\Reader;
 use TCB\FlysystemSync\Filesystem\Writer;
 use TCB\FlysystemSync\Path\Directory;
+use TCB\FlysystemSync\Path\File;
 
-readonly class NothingDirectory  implements Action
+readonly class NothingDirectory implements Contracts\NothingDirectory
 {
     public function __construct(
         public Directory $source,
-        public Directory $target
+        public File|Directory $target
     ) {
     }
 

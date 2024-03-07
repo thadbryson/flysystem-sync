@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Path;
 
-use function array_diff;
 use function TCB\FlysystemSync\Functions\path_prepare;
 
 abstract class AbstractPath
@@ -32,7 +31,15 @@ abstract class AbstractPath
             'directory';
     }
 
-    abstract public function toArray(): array;
+    public function toArray(): array
+    {
+        return [
+            'path'         => $this->path,
+            'type'         => $this->type,
+            'visibility'   => $this->visibility,
+            'lastModified' => $this->lastModified,
+        ];
+    }
 
     public function toString(): string
     {
@@ -51,21 +58,20 @@ abstract class AbstractPath
 
     public function isDifferent(File|Directory $target): bool
     {
-        return $this->getDifferences($target) !== [];
+        return
+            $this->isDifferentProperties($target) ||
+            $this->isDifferentVisibility($target);
     }
 
-    public function getDifferences(File|Directory $target): array
+    public function isDifferentProperties(File|Directory $target): bool
     {
-        $differences = array_diff(
-            $this->toArray(),
-            $target->toArray()
-        );
+        return
+            $this->lastModified > $target->lastModified ||
+            $this->type !== $target->type;
+    }
 
-        // Can't edit last modified
-        if ($this->lastModified <= $target->lastModified) {
-            unset($differences['lastModified']);
-        }
-
-        return $differences;
+    public function isDifferentVisibility(File|Directory $target): bool
+    {
+        return $this->visibility !== $target->visibility;
     }
 }
