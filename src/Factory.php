@@ -19,20 +19,20 @@ use TCB\FlysystemSync\Path\File;
 
 class Factory
 {
-    public function action(File|Directory|null $source, File|Directory|null $target): Contracts\Action
+    public final function action(File|Directory|null $source, File|Directory|null $target): Contracts\Action
     {
         $type = ActionEnum::getType($source, $target);
 
         return match ($type) {
             ActionEnum::CREATE_DIRECTORY  => $this->createDirectory($source),
-            ActionEnum::DELETE_DIRECTORY  => $this->deleteDirectory($source),
-            ActionEnum::UPDATE_DIRECTORY  => $this->updateDirectory($source),
-            ActionEnum::NOTHING_DIRECTORY => $this->nothingDirectory($source),
+            ActionEnum::DELETE_DIRECTORY  => $this->deleteDirectory($target),
+            ActionEnum::UPDATE_DIRECTORY  => $this->updateDirectory($source, $target),
+            ActionEnum::NOTHING_DIRECTORY => $this->nothingDirectory($source, $target),
 
             ActionEnum::CREATE_FILE       => $this->createFile($source),
-            ActionEnum::DELETE_FILE       => $this->deleteFile($source),
-            ActionEnum::UPDATE_FILE       => $this->updateFile($source),
-            ActionEnum::NOTHING_FILE      => $this->nothingFile($source),
+            ActionEnum::DELETE_FILE       => $this->deleteFile($target),
+            ActionEnum::UPDATE_FILE       => $this->updateFile($source, $target),
+            ActionEnum::NOTHING_FILE      => $this->nothingFile($source, $target),
         };
     }
 
@@ -56,23 +56,23 @@ class Factory
         return new DeleteFile($target);
     }
 
-    protected function updateDirectory(Directory $source): Contracts\UpdateDirectory
+    protected function updateDirectory(Directory $source, File|Directory $target): Contracts\UpdateDirectory
     {
-        return new UpdateDirectory($source);
+        return new UpdateDirectory($source, $target);
     }
 
-    protected function updateFile(File $source): Contracts\UpdateFile
+    protected function updateFile(File $source, File|Directory $target): Contracts\UpdateFile
     {
-        return new UpdateFile($source);
+        return new UpdateFile($source, $target);
     }
 
-    protected function nothingDirectory(Directory $source): Contracts\NothingDirectory
+    protected function nothingDirectory(Directory $source, File|Directory $target): Contracts\NothingDirectory
     {
-        return new NothingDirectory($source);
+        return new NothingDirectory($source, $target);
     }
 
-    protected function nothingFile(File $source): Contracts\NothingFile
+    protected function nothingFile(File $source, File|Directory $target): Contracts\NothingFile
     {
-        return new NothingFile($source);
+        return new NothingFile($source, $target);
     }
 }

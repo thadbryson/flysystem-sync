@@ -4,40 +4,31 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Path;
 
+use function array_diff_key;
+use function array_key_exists;
 use function TCB\FlysystemSync\Functions\path_prepare;
 
 abstract class AbstractPath
 {
     public readonly string $path;
 
-    public readonly string $type;
-
-    public readonly ?string $visibility;
-
-    public readonly ?int $lastModified;
-
     public function __construct(
         string $path,
-        ?string $visibility,
-        ?int $lastModified,
+        public readonly ?string $visibility,
+        public readonly ?int $lastModified
     ) {
         $this->path = path_prepare($path);
-
-        $this->visibility   = $visibility;
-        $this->lastModified = $lastModified;
-
-        $this->type = $this->isFile() ?
-            'file' :
-            'directory';
     }
 
     public function toArray(): array
     {
         return [
-            'path'         => $this->path,
-            'type'         => $this->type,
-            'visibility'   => $this->visibility,
-            'lastModified' => $this->lastModified,
+            'path'          => $this->path,
+            'type'          => static::class,
+            'is_file'       => $this->isFile(),
+            'is_directory'  => $this->isDirectory(),
+            'visibility'    => $this->visibility,
+            'last_modified' => $this->lastModified,
         ];
     }
 
@@ -56,22 +47,23 @@ abstract class AbstractPath
         return $this instanceof Directory;
     }
 
+    public function isSame(File|Directory $target): bool
+    {
+        return $this->toArray() === $target->toArray();
+    }
+
     public function isDifferent(File|Directory $target): bool
     {
-        return
-            $this->isDifferentProperties($target) ||
-            $this->isDifferentVisibility($target);
+        return !$this->isSame($target);
     }
 
-    public function isDifferentProperties(File|Directory $target): bool
+    public function isDifferentOnlyVisibility(File|Directory $target): bool
     {
-        return
-            $this->lastModified > $target->lastModified ||
-            $this->type !== $target->type;
-    }
+        $diff = array_diff_key(
+            $this->toArray(),
+            $target->toArray()
+        );
 
-    public function isDifferentVisibility(File|Directory $target): bool
-    {
-        return $this->visibility !== $target->visibility;
+        return count($diff) === 1 && array_key_exists('visibility', $diff);
     }
 }

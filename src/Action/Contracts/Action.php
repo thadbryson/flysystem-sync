@@ -10,4 +10,6 @@ use TCB\FlysystemSync\Filesystem\Writer;
 interface Action
 {
     public function __invoke(Reader $reader, Writer $writer): void;
+
+    public function isSuccess(Writer $writer): bool;
 }

@@ -10,12 +10,12 @@
         }
     ],
     "require":           {
-        "php":                        "^8.2",
-        "league/flysystem":           "^3.0",
-        "league/flysystem-read-only": "^3.3"
+        "php":              "^8.2",
+        "league/flysystem": "^3.0"
     },
     "require-dev":       {
         "roave/security-advisories":  "dev-latest",
+
         "codeception/codeception":    "^5.1",
         "codeception/module-asserts": "^3.0"
     },

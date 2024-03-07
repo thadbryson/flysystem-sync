@@ -4,93 +4,133 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Filesystem;
 
-use League\Flysystem\DirectoryListing;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
 use League\Flysystem\FilesystemReader;
-use League\Flysystem\PathNormalizer;
-use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
-use League\Flysystem\UrlGeneration\PublicUrlGenerator;
-use League\Flysystem\UrlGeneration\TemporaryUrlGenerator;
-use TCB\FlysystemSync\Filesystem\Traits\LoaderTrait;
+use TCB\FlysystemSync\Path\Directory;
+use TCB\FlysystemSync\Path\File;
+
+use function TCB\FlysystemSync\Functions\path_collect;
+use function TCB\FlysystemSync\Functions\path_prepare_many;
 
 /**
  * Only Filesystem reading functions.
  *
  * No write functionality.
  */
-class Reader implements FilesystemReader
+class Reader
 {
-    use LoaderTrait;
-
     /**
      * Performs Filesystem operations.
      */
-    protected readonly Filesystem $reader;
+    protected readonly Filesystem $filesystem;
 
-    public function __construct(
-        FilesystemAdapter $adapter,
-        array $config = [],
-        PathNormalizer $pathNormalizer = null,
-        ?PublicUrlGenerator $publicUrlGenerator = null,
-        ?TemporaryUrlGenerator $temporaryUrlGenerator = null,
-    ) {
-        $this->reader = new Filesystem(
-            new ReadOnlyFilesystemAdapter($adapter),
-            $config,
-            $pathNormalizer,
-            $publicUrlGenerator,
-            $temporaryUrlGenerator,
-        );
+    public function __construct(FilesystemAdapter $adapter)
+    {
+        $this->filesystem = new Filesystem($adapter);
     }
 
-    public function fileExists(string $location): bool
+    public function exists(File|Directory $path): bool
     {
-        return $this->reader->fileExists($location);
+        return $path->isFile() ?
+            $this->filesystem->fileExists($path->path) :
+            $this->filesystem->directoryExists($path->path);
     }
 
-    public function directoryExists(string $location): bool
+    public function loadFile(string $path): File
     {
-        return $this->reader->directoryExists($location);
+        $file = $this->load($path) ?? throw new \Exception('FILE not found');
+
+        if ($file instanceof File === false) {
+            throw new \Exception('Not a FILE');
+        }
+
+        return $file;
     }
 
-    public function has(string $location): bool
+    public function loadDirectory(string $path): Directory
     {
-        return $this->reader->has($location);
+        $directory = $this->load($path) ?? throw new \Exception('DIRECTORY not found');
+
+        if ($directory instanceof Directory === false) {
+            throw new \Exception('Not a DIRECTORY');
+        }
+
+        return $directory;
     }
 
-    public function read(string $location): string
+    public function load(string $path): File|Directory|null
     {
-        return $this->reader->read($location);
+        return match (true) {
+            $this->filesystem->fileExists($path)      => new File(
+                $path,
+                $this->filesystem->visibility($path),
+                $this->filesystem->lastModified($path),
+                $this->filesystem->fileSize($path),
+                $this->filesystem->mimeType($path),
+            ),
+
+            $this->filesystem->directoryExists($path) => new Directory(
+                $path,
+                $this->filesystem->visibility($path),
+                $this->filesystem->lastModified($path)
+            ),
+
+            default                                   => null
+        };
     }
 
-    public function readStream(string $location)
+    /**
+     * @return File[]|Directory[]|null[]
+     */
+    public function loadDeep(string ...$paths): array
     {
-        return $this->reader->readStream($location);
+        $all   = [];
+        $paths = path_prepare_many(...$paths);
+
+        foreach ($paths as $current) {
+            $current = path_collect($all, $this->load($current));
+
+            // Get DIRECTORY contents?
+            if ($current === null || $current->isFile()) {
+                continue;
+            }
+
+            $this
+                ->filesystem->listContents($current->path, FilesystemReader::LIST_DEEP)
+                ->sortByPath()
+                ->filter(function (FileAttributes|DirectoryAttributes $attributes) use (&$all) {
+                    path_collect(
+                        $all,
+                        $attributes->isFile() ?
+                            File::fromAttributes($attributes) :
+                            Directory::fromAttributes($attributes)
+                    );
+                });
+        }
+
+        return $all;
     }
 
-    public function listContents(string $location, bool $deep = self::LIST_SHALLOW): DirectoryListing
+    public function isSameLoaded(File|Directory $target): bool
     {
-        return $this->reader->listContents($location, $deep);
+        $loaded = $this->load($target->path);
+
+        if ($loaded === null) {
+            return false;
+        }
+
+        return $loaded->isSame($target);
     }
 
-    public function lastModified(string $path): int
+    /**
+     * @return resource
+     * @throws \League\Flysystem\FilesystemException
+     */
+    public function getContents(File|Directory $source): mixed
     {
-        return $this->reader->lastModified($path);
-    }
-
-    public function fileSize(string $path): int
-    {
-        return $this->reader->fileSize($path);
-    }
-
-    public function mimeType(string $path): string
-    {
-        return $this->reader->mimeType($path);
-    }
-
-    public function visibility(string $path): string
-    {
-        return $this->reader->visibility($path);
+        return $this->filesystem->readStream($source->path);
     }
 }
