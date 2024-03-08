@@ -4,14 +4,14 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action;
 
-use TCB\FlysystemSync\Action\Traits\IsSuccessTrait;
+use TCB\FlysystemSync\Action\Traits\IsSuccessDirectoryTrait;
 use TCB\FlysystemSync\Filesystem\Reader;
 use TCB\FlysystemSync\Filesystem\Writer;
 use TCB\FlysystemSync\Path\Directory;
 
 readonly class CreateDirectory implements Contracts\CreateDirectory
 {
-    use IsSuccessTrait;
+    use IsSuccessDirectoryTrait;
 
     public function __construct(
         public Directory $source
@@ -20,6 +20,6 @@ readonly class CreateDirectory implements Contracts\CreateDirectory
 
     public function __invoke(Reader $reader, Writer $writer): void
     {
-        $writer->createDirectory($this->source);
+        $writer->createDirectory($this->source->path);
     }
 }

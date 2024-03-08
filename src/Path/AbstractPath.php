@@ -32,11 +32,6 @@ abstract class AbstractPath
         ];
     }
 
-    public function toString(): string
-    {
-        return $this->path;
-    }
-
     public function isFile(): bool
     {
         return $this instanceof File;

@@ -16,44 +16,44 @@ use TCB\FlysystemSync\Path\File;
 readonly class Sorter
 {
     /**
-     * @var Contracts\Create[]
-     */
-    public array $create_files;
-
-    /**
-     * @var Contracts\Create[]
+     * @var Contracts\CreateDirectory[]
      */
     public array $create_directories;
 
     /**
-     * @var Contracts\Delete[]
+     * @var Contracts\CreateFile[]
      */
-    public array $delete_files;
+    public array $create_files;
 
     /**
-     * @var Contracts\Delete[]
+     * @var Contracts\DeleteDirectory[]
      */
     public array $delete_directories;
 
     /**
-     * @var Contracts\Update[]
+     * @var Contracts\DeleteFile[]
      */
-    public array $update_files;
+    public array $delete_files;
 
     /**
-     * @var Contracts\Update[]
+     * @var Contracts\UpdateDirectory[]
      */
     public array $update_directories;
 
     /**
-     * @var Contracts\Nothing[]
+     * @var Contracts\UpdateFile[]
      */
-    public array $nothing_files;
+    public array $update_files;
 
     /**
-     * @var Contracts\Nothing[]
+     * @var Contracts\NothingDirectory[]
      */
     public array $nothing_directories;
+
+    /**
+     * @var Contracts\NothingFile[]
+     */
+    public array $nothing_files;
 
     /**
      * @param File[]|Directory[]|null[] $sources
@@ -68,49 +68,22 @@ readonly class Sorter
     {
         /** @var File|Directory|null $source */
         foreach ($sources as $path => $source) {
-            $target = $this->assert($path, $source, $targets);
-
-            $action = $factory->action($source, $target);
+            // Build the Action
+            $action = $factory->action($source, $targets[$path] ?? null);
 
             match (true) {
-                $action->isCreate() && $action->isFile()       => $this->create_files[$path] = $action,
-                $action->isCreate() && $action->isDirectory()  => $this->create_directories[$path] = $action,
+                $action instanceof Contracts\CreateDirectory  => $this->create_directories[$path] = $action,
+                $action instanceof Contracts\CreateFile       => $this->create_files[$path] = $action,
 
-                $action->isDelete() && $action->isFile()       => $this->delete_files[$path] = $action,
-                $action->isDelete() && $action->isDirectory()  => $this->delete_directories[$path] = $action,
+                $action instanceof Contracts\DeleteDirectory  => $this->delete_directories[$path] = $action,
+                $action instanceof Contracts\DeleteFile       => $this->delete_files[$path] = $action,
 
-                $action->isUpdate() && $action->isFile()       => $this->update_files[$path] = $action,
-                $action->isUpdate() && $action->isDirectory()  => $this->update_directories[$path] = $action,
+                $action instanceof Contracts\UpdateDirectory  => $this->update_directories[$path] = $action,
+                $action instanceof Contracts\UpdateFile       => $this->update_files[$path] = $action,
 
-                $action->isNothing() && $action->isFile()      => $this->nothing_files[$path] = $action,
-                $action->isNothing() && $action->isDirectory() => $this->nothing_directories[$path] = $action,
+                $action instanceof Contracts\NothingDirectory => $this->nothing_directories[$path] = $action,
+                $action instanceof Contracts\NothingFile      => $this->nothing_files[$path] = $action,
             };
         }
-    }
-
-    protected function assert(string $path, mixed $source, array $targets): File|Directory|null
-    {
-        $target = $targets[$path] ?? null;
-
-        // Both can't be NULL
-        if ($source === null && $target === null) {
-            throw new \InvalidArgumentException('');
-        }
-
-        if ($source !== null &&
-            $source instanceof File === false &&
-            $source instanceof Directory === false
-        ) {
-            throw new \InvalidArgumentException('Bad SOURCE');
-        }
-
-        if ($target !== null &&
-            $target instanceof File === false &&
-            $target instanceof Directory === false
-        ) {
-            throw new \InvalidArgumentException('Bad TARGET');
-        }
-
-        return $target;
     }
 }

@@ -11,10 +11,10 @@ use TCB\FlysystemSync\Path\File;
 /**
  * @property-read File|Directory $source
  */
-trait IsSuccessTrait
+trait IsSuccessDirectoryTrait
 {
     public function isSuccess(Writer $writer): bool
     {
-        return $writer->isSameLoaded($this->source);
+        return $writer->directoryExists($this->source->path);
     }
 }

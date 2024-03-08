@@ -9,5 +9,5 @@ use TCB\FlysystemSync\Path\File;
 
 interface NothingFile extends Action
 {
-    public function __construct(File $source, File|Directory $target);
+    public function __construct(File $source, File $target);
 }

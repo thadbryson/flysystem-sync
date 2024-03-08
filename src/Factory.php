@@ -5,15 +5,7 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use TCB\FlysystemSync\Action\Contracts;
-use TCB\FlysystemSync\Action\CreateDirectory;
-use TCB\FlysystemSync\Action\CreateFile;
-use TCB\FlysystemSync\Action\DeleteDirectory;
-use TCB\FlysystemSync\Action\DeleteFile;
 use TCB\FlysystemSync\Action\Enums\ActionEnum;
-use TCB\FlysystemSync\Action\NothingDirectory;
-use TCB\FlysystemSync\Action\NothingFile;
-use TCB\FlysystemSync\Action\UpdateDirectory;
-use TCB\FlysystemSync\Action\UpdateFile;
 use TCB\FlysystemSync\Path\Directory;
 use TCB\FlysystemSync\Path\File;
 
@@ -38,41 +30,41 @@ class Factory
 
     protected function createDirectory(Directory $source): Contracts\CreateDirectory
     {
-        return new CreateDirectory($source);
+        return new Action\CreateDirectory($source);
     }
 
     protected function createFile(File $source): Contracts\CreateFile
     {
-        return new CreateFile($source);
+        return new Action\CreateFile($source);
     }
 
     protected function deleteDirectory(Directory $target): Contracts\DeleteDirectory
     {
-        return new DeleteDirectory($target);
+        return new Action\DeleteDirectory($target);
     }
 
     protected function deleteFile(File $target): Contracts\DeleteFile
     {
-        return new DeleteFile($target);
+        return new Action\DeleteFile($target);
     }
 
     protected function updateDirectory(Directory $source, File|Directory $target): Contracts\UpdateDirectory
     {
-        return new UpdateDirectory($source, $target);
+        return new Action\UpdateDirectory($source, $target);
     }
 
     protected function updateFile(File $source, File|Directory $target): Contracts\UpdateFile
     {
-        return new UpdateFile($source, $target);
+        return new Action\UpdateFile($source, $target);
     }
 
     protected function nothingDirectory(Directory $source, File|Directory $target): Contracts\NothingDirectory
     {
-        return new NothingDirectory($source, $target);
+        return new Action\NothingDirectory($source, $target);
     }
 
     protected function nothingFile(File $source, File|Directory $target): Contracts\NothingFile
     {
-        return new NothingFile($source, $target);
+        return new Action\NothingFile($source, $target);
     }
 }

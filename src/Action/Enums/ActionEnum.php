@@ -4,8 +4,7 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action\Enums;
 
-namespace TCB\FlysystemSync\Action\Enums;
-
+use TCB\FlysystemSync\Path\AbstractPath;
 use TCB\FlysystemSync\Path\Directory;
 use TCB\FlysystemSync\Path\File;
 
@@ -20,14 +19,13 @@ enum ActionEnum
     case UPDATE_FILE;
     case NOTHING_FILE;
 
-    public static function getType(File|Directory|null $source, File|Directory|null $target): ?self
+    public static function getType(AbstractPath|null $source, File|Directory|null $target): ?self
     {
         if ($source === null && $target === null) {
             throw new \InvalidArgumentException('');
         }
 
-        $is_file = $source ?? $target;
-        $is_file = $is_file->isFile();
+        $is_file = ($source ?? $target)->isFile();
 
         return match (true) {
             $source !== null && $target === null => $is_file ? self::CREATE_FILE : self::CREATE_DIRECTORY,

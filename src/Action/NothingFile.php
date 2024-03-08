@@ -4,19 +4,18 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Action;
 
-use TCB\FlysystemSync\Action\Traits\IsSuccessTrait;
+use TCB\FlysystemSync\Action\Traits\IsSuccessFileTrait;
 use TCB\FlysystemSync\Filesystem\Reader;
 use TCB\FlysystemSync\Filesystem\Writer;
-use TCB\FlysystemSync\Path\Directory;
 use TCB\FlysystemSync\Path\File;
 
 readonly class NothingFile implements Contracts\NothingFile
 {
-    use IsSuccessTrait;
+    use IsSuccessFileTrait;
 
     public function __construct(
         public File $source,
-        public File|Directory $target
+        public File $target
     ) {
     }
 
