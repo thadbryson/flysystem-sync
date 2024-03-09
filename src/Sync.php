@@ -5,133 +5,27 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use League\Flysystem\Filesystem;
-use League\Flysystem\StorageAttributes;
 
 class Sync
 {
-    /**
-     * Master filesystem.
-     *
-     * @var Filesystem
-     */
-    protected $master;
 
-    /**
-     * Slave filesystem.
-     *
-     * @var Filesystem
-     */
-    protected $slave;
 
-    /**
-     * Configuration for Adapter.
-     *
-     * @var array
-     */
-    protected $config;
-
-    /**
-     * Util object for getting WRITE, UPDATE, and DELETE paths.
-     *
-     * @var Util
-     */
-    protected $util;
-
-    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $directory = '/')
+    public function __construct()
     {
-        $this->master = $master;
-        $this->slave  = $slave;
-
-        $this->config = $config;
-
-        $this->util = new Util($master, $slave, $directory);
     }
 
-    /**
-     * Get Util helper object used for getting WRITE, UPDATE, and DELETE paths.
-     */
-    public function getUtil(): Util
+    public function getSorter(Filesystem $reader, Filesystem $writer, Factory $factory = null): void
     {
-        return $this->util;
-    }
+        $sources = new Collection($reader);
+        $sources->load();
 
-    /**
-     * Sync any writes.
-     *
-     * @return $this
-     */
-    public function syncWrites(): Sync
-    {
-        foreach ($this->util->getWrites() as $path) {
-            $this->put($path);
-        }
+        $targets = new Collection($writer, ...$sources->paths());
 
-        return $this;
-    }
+        $sources->loadNew(...$targets->paths());
 
-    /**
-     * Sync any updates.
-     *
-     * @return $this
-     */
-    public function syncUpdates(): Sync
-    {
-        foreach ($this->util->getUpdates() as $path) {
-            $this->put($path);
-        }
+        $factory = $factory ?? new Factory;
+        $factory->setFilesystems($reader, $writer);
 
-        return $this;
-    }
-
-    /**
-     * Sync any deletes.
-     *
-     * @return $this
-     */
-    public function syncDeletes(): Sync
-    {
-        foreach ($this->util->getDeletes() as $path) {
-
-            // A dir delete may of deleted this path already.
-            if ($path->isFile()) {
-                $this->slave->delete($path->path());
-            }
-            // A dir? They're deleted a special way.
-            elseif ($path->isDir()) {
-                $this->slave->deleteDirectory($path->path());
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Call $this->syncWrites(), $this->syncUpdates(), and $this->syncDeletes()
-     *
-     * @return $this
-     */
-    public function sync(): Sync
-    {
-        return $this
-            ->syncWrites()
-            ->syncUpdates()
-            ->syncDeletes();
-    }
-
-    /**
-     * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
-     */
-    protected function put(StorageAttributes $path): void
-    {
-        // Otherwise create or update the file.
-        if ($path->isFile()) {
-            $contents = $this->master->readStream($path->path());
-
-            $this->slave->writeStream($path->path(), $contents, $this->config);
-        }
-        // A dir? Create it.
-        elseif ($path->isDir()) {
-            $this->slave->createDirectory($path->path(), $this->config);
-        }
+        $sorter = new Sorter($factory, $sources, $targets);
     }
 }
