@@ -4,19 +4,48 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\Filesystem;
-use League\Flysystem\StorageAttributes;
+namespace TCB\FlysystemSync;
 
-interface Action
+use League\Flysystem\StorageAttributes;
+use TCB\FlysystemSync\Helpers\Helper;
+
+enum Action
 {
-    public function __construct(
-        Filesystem $reader,
-        Filesystem $writer,
+    case CREATE_FILE;
+    case DELETE_FILE;
+    case UPDATE_FILE;
+    case NOTHING_FILE;
+    case CREATE_DIRECTORY;
+    case DELETE_DIRECTORY;
+    case UPDATE_DIRECTORY;
+    case NOTHING_DIRECTORY;
+
+    /**
+     *
+     * @throws \Exception
+     */
+    public static function get(
         ?StorageAttributes $source,
         ?StorageAttributes $target
-    );
+    ): self {
+        Helper::assertSourceTarget($source, $target);
 
-    public function execute();
+        return match (true) {
+            Helper::isSame($source, $target)     => $source->isFile() ?
+                self::NOTHING_FILE :
+                self::NOTHING_DIRECTORY,
 
-    public function isSuccess(): bool;
+            $source !== null && $target === null => $source->isFile() ?
+                self::CREATE_FILE :
+                self::CREATE_DIRECTORY,
+
+            $source === null && $target !== null => $target->isFile() ?
+                self::DELETE_FILE :
+                self::DELETE_DIRECTORY,
+
+            default                              => $source->isFile() ?
+                self::UPDATE_FILE :
+                self::UPDATE_DIRECTORY,
+        };
+    }
 }

@@ -5,27 +5,52 @@ declare(strict_types = 1);
 namespace TCB\FlysystemSync;
 
 use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemAdapter;
+use League\Flysystem\StorageAttributes;
+use TCB\FlysystemSync\Helpers\Loader;
 
 class Sync
 {
+    public Contracts\Runner $runner;
 
-
-    public function __construct()
+    private function __construct()
     {
     }
 
-    public function getSorter(Filesystem $reader, Filesystem $writer, Factory $factory = null): void
+    public static function make(FilesystemAdapter $reader, FilesystemAdapter $writer): static
     {
-        $sources = new Collection($reader);
-        $sources->load();
+        $sync         = new static;
+        $sync->runner = new Runner($reader, $writer);
 
-        $targets = new Collection($writer, ...$sources->paths());
+        return $sync;
+    }
 
-        $sources->loadNew(...$targets->paths());
+    public static function fromRunner(Contracts\Runner $runner): static
+    {
+        $sync         = new static;
+        $sync->runner = $runner;
 
-        $factory = $factory ?? new Factory;
-        $factory->setFilesystems($reader, $writer);
+        return $sync;
+    }
 
-        $sorter = new Sorter($factory, $sources, $targets);
+    public function file(string $path): void
+    {
+        $source = Loader::getFile($this->runner->reader, $path) ?? throw new \Exception('FILE not found');
+        $target = Loader::getPath($this->runner->writer, $path);
+
+        $this->runner->execute($source, $target);
+    }
+
+    public function directory(string $path): void
+    {
+        $results = [];
+
+        $this->runner->reader
+            ->listContents($path, true)
+            ->map(function (StorageAttributes $source) use (&$results): bool {
+                $target = Loader::getPath($this->runner->writer, $source->path());
+
+                $results[$source->path()] = $this->runner->execute($source, $target);
+            });
     }
 }
