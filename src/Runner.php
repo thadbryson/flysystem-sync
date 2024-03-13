@@ -4,14 +4,14 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\StorageAttributes;
-use SebastianBergmann\CodeCoverage\Report\Html\File;
+use League\Flysystem\ReadOnly\ReadOnlyFilesystemAdapter;
 use TCB\FlysystemSync\Helpers\Helper;
 use TCB\FlysystemSync\Helpers\Loader;
+use TCB\FlysystemSync\Paths\Contracts\Path;
+use TCB\FlysystemSync\Paths\Directory;
+use TCB\FlysystemSync\Paths\File;
 
 readonly class Runner implements Contracts\Runner
 {
@@ -19,19 +19,17 @@ readonly class Runner implements Contracts\Runner
 
     public Filesystem $writer;
 
-    public function __construct(
-        FilesystemAdapter $reader,
-        FilesystemAdapter $writer
-    ) {
-        $this->reader = new Filesystem(new ReadOnl);
-        $this->reader = new Filesystem($writer);
+    public function __construct(FilesystemAdapter $reader, FilesystemAdapter $writer)
+    {
+        $this->reader = new Filesystem(new ReadOnlyFilesystemAdapter($reader));
+        $this->writer = new Filesystem($writer);
     }
 
-    public function execute(?StorageAttributes $source, ?StorageAttributes $target): bool
+    public function execute(?Path $source, ?Path $target): array
     {
         $action = Action::get($source, $target);
 
-        return match ($action) {
+        match ($action) {
             Action::CREATE_FILE       => $this->createFile($source),
             Action::DELETE_FILE       => $this->deleteFile($target),
             Action::UPDATE_FILE       => $this->updateFile($source, $target),
@@ -42,103 +40,98 @@ readonly class Runner implements Contracts\Runner
             Action::UPDATE_DIRECTORY  => $this->updateDirectory($source, $target),
             Action::NOTHING_DIRECTORY => $this->nothingDirectory($source, $target),
         };
+
+        $result = match ($action) {
+            Action::CREATE_FILE       => $this->sameFiles($source->path),
+            Action::DELETE_FILE       => $this->fileExistsNot($target->path),
+            Action::UPDATE_FILE       => $this->sameFiles($source->path),
+            Action::NOTHING_FILE      => $this->sameFiles($source->path),
+
+            Action::CREATE_DIRECTORY  => $this->sameDirectories($source->path),
+            Action::DELETE_DIRECTORY  => $this->directoryExistsNot($target->path),
+            Action::UPDATE_DIRECTORY  => $this->sameDirectories($source->path),
+            Action::NOTHING_DIRECTORY => $this->sameDirectories($source->path),
+        };
+
+        return [
+            'source'        => $source,
+            'target'        => $target,
+            'action'        => $action,
+            'execute_after' => $result,
+        ];
     }
 
-    public function createFile(FileAttributes $source): bool
+    public function createFile(File $source): void
     {
         $this->writer->writeStream(
-            $source->path(),
-            $this->reader->readStream($source->path())
+            $source->path,
+            $this->reader->readStream($source->path)
         );
-
-        return $this->isSuccessFile($source->path(), $source->path());
     }
 
-    public function deleteFile(FileAttributes $target): bool
+    public function deleteFile(File $target): void
     {
-        $this->writer->delete($target->path());
-
-        return $this->isSuccessFileDeleted($target->path(), $target->path());
+        $this->writer->delete($target->path);
     }
 
-    public function updateFile(FileAttributes $source, StorageAttributes $target): bool
+    public function updateFile(File $source, Path $target): void
     {
         $this->writer->writeStream(
-            $target->path(),
-            $this->reader->readStream($source->path())
+            $target->path,
+            $this->reader->readStream($source->path)
         );
-
-        return $this->isSuccessFile($source->path(), $target->path());
     }
 
-    public function nothingFile(FileAttributes $source, FileAttributes $target): bool
+    public function nothingFile(File $source, File $target): void
     {
-        return $this->isSuccessFile($source->path(), $target->path());
     }
 
-    public function createDirectory(DirectoryAttributes $source): bool
+    public function createDirectory(Directory $source): void
     {
-        $this->writer->createDirectory($source->path());
-
-        return $this->isSuccessDirectory($source->path(), $source->path());
+        $this->writer->createDirectory($source->path);
     }
 
-    public function deleteDirectory(DirectoryAttributes $target): bool
+    public function deleteDirectory(Directory $target): void
     {
-        $this->writer->deleteDirectory($target->path());
-
-        return $this->isSuccessDirectoryDeleted($target->path(), $target->path());
+        $this->writer->deleteDirectory($target->path);
     }
 
-    public function updateDirectory(DirectoryAttributes $source, StorageAttributes $target): bool
+    public function updateDirectory(Directory $source, Path $target): void
     {
-        // Directories don't update.
-        // Only difference would be "visibility" which we're ignoring right now.
-        return $this->isSuccessDirectory($source->path(), $target->path());
+        // Only thing for directories would be if the TARGET is not a directory.
+        // They'd have the same name and other properties.
+        $this->writer->createDirectory($target->path);
     }
 
-    public function nothingDirectory(DirectoryAttributes $source, DirectoryAttributes $target): bool
+    public function nothingDirectory(Directory $source, Directory $target): void
     {
-        return $this->isSuccessDirectory($source->path(), $target->path());
     }
 
-    protected function isSuccessFile(string $path_source, string $path_target): bool
+    public function sameFiles(string $path): bool
     {
-        $source = Loader::getFile($this->reader, $path_source);
-        $target = Loader::getFile($this->writer, $path_target);
-
-        if ($source === null || $target === null) {
-            return false;
-        }
+        $source = Loader::getFile($this->reader, $path);
+        $target = Loader::getFile($this->writer, $path);
 
         return Helper::isSame($source, $target);
     }
 
-    protected function isSuccessFileDeleted(string $path_source, string $path_target): bool
+    public function fileExistsNot(string $path): bool
     {
-        $source = Loader::getFile($this->reader, $path_source);
-        $target = Loader::getFile($this->writer, $path_target);
-
-        return $source === null && $target === null;
+        return $this->reader->fileExists($path) === false &&
+               $this->writer->fileExists($path) === false;
     }
 
-    protected function isSuccessDirectory(string $path_source, string $path_target): bool
+    public function sameDirectories(string $path): bool
     {
-        $source = Loader::getDirectory($this->reader, $path_source);
-        $target = Loader::getDirectory($this->writer, $path_target);
-
-        if ($source === null || $target === null) {
-            return false;
-        }
+        $source = Loader::getDirectory($this->reader, $path);
+        $target = Loader::getDirectory($this->writer, $path);
 
         return Helper::isSame($source, $target);
     }
 
-    protected function isSuccessDirectoryDeleted(string $path_source, string $path_target): bool
+    public function directoryExistsNot(string $path): bool
     {
-        $source = Loader::getDirectory($this->reader, $path_source);
-        $target = Loader::getDirectory($this->writer, $path_target);
-
-        return $source === null && $target === null;
+        return $this->reader->directoryExists($path) === false &&
+               $this->writer->directoryExists($path) === false;
     }
 }

@@ -4,30 +4,30 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Contracts;
 
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem;
-use League\Flysystem\StorageAttributes;
+use League\Flysystem\FilesystemAdapter;
+use TCB\FlysystemSync\Paths\Contracts\Path;
+use TCB\FlysystemSync\Paths\Directory;
+use TCB\FlysystemSync\Paths\File;
 
 interface Runner
 {
-    public function __construct(Filesystem $reader, Filesystem $writer);
+    public function __construct(FilesystemAdapter $reader, FilesystemAdapter $writer);
 
-    public function execute(?StorageAttributes $source, ?StorageAttributes $target): bool;
+    public function execute(?Path $source, ?Path $target): array;
 
-    public function createFile(FileAttributes $source): bool;
+    public function createFile(File $source): void;
 
-    public function deleteFile(FileAttributes $target): bool;
+    public function deleteFile(File $target): void;
 
-    public function updateFile(FileAttributes $source, StorageAttributes $target): bool;
+    public function updateFile(File $source, Path $target): void;
 
-    public function nothingFile(FileAttributes $source, FileAttributes $target): bool;
+    public function nothingFile(File $source, File $target): void;
 
-    public function createDirectory(DirectoryAttributes $source): bool;
+    public function createDirectory(Directory $source): void;
 
-    public function deleteDirectory(DirectoryAttributes $target): bool;
+    public function deleteDirectory(Directory $target): void;
 
-    public function updateDirectory(DirectoryAttributes $source, StorageAttributes $target): bool;
+    public function updateDirectory(Directory $source, Path $target): void;
 
-    public function nothingDirectory(DirectoryAttributes $source, DirectoryAttributes $target): bool;
+    public function nothingDirectory(Directory $source, Directory $target): void;
 }

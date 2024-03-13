@@ -6,8 +6,8 @@ namespace TCB\FlysystemSync;
 
 namespace TCB\FlysystemSync;
 
-use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Helpers\Helper;
+use TCB\FlysystemSync\Paths\Contracts\Path;
 
 enum Action
 {
@@ -24,11 +24,11 @@ enum Action
      *
      * @throws \Exception
      */
-    public static function get(
-        ?StorageAttributes $source,
-        ?StorageAttributes $target
-    ): self {
-        Helper::assertSourceTarget($source, $target);
+    public static function get(?Path $source, ?Path $target): self
+    {
+        if ($source === null && $target === null) {
+            throw new \Exception('');
+        }
 
         return match (true) {
             Helper::isSame($source, $target)     => $source->isFile() ?
