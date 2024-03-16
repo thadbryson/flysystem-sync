@@ -12,9 +12,5 @@ interface Path
 
     public function isDirectory(): bool;
 
-    public function clone(): static;
-
-    public function isSame(?Path $target): bool;
-
-    public function getDifferences(?Path $target): array;
+    public function isChanged(?Path $target): bool;
 }

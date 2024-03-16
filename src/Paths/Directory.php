@@ -6,12 +6,9 @@ namespace TCB\FlysystemSync\Paths;
 
 use TCB\FlysystemSync\Helpers\PathHelper;
 use TCB\FlysystemSync\Paths\Contracts\Path;
-use TCB\FlysystemSync\Paths\Traits\CompareTrait;
 
 readonly class Directory implements Path
 {
-    use CompareTrait;
-
     public string $path;
 
     public function __construct(
@@ -20,6 +17,15 @@ readonly class Directory implements Path
         public ?int $lastModified
     ) {
         $this->path = PathHelper::prepare($path);
+    }
+
+    public function isChanged(?Path $target): bool
+    {
+        return
+            $target === null ||
+            $this->isFile() !== $target->isFile() ||
+            $this->isDirectory() !== $target->isDirectory() ||
+            $this->visibility !== $target->visibility;
     }
 
     public function toArray(): array
@@ -31,21 +37,12 @@ readonly class Directory implements Path
         ];
     }
 
-    public function clone(): static
-    {
-        return new static(
-            $this->path,
-            $this->visibility,
-            $this->lastModified,
-        );
-    }
-
-    public function isFile(): bool
+    public function isFile(): false
     {
         return false;
     }
 
-    public function isDirectory(): bool
+    public function isDirectory(): true
     {
         return true;
     }

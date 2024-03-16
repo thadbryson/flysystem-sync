@@ -11,9 +11,12 @@
     ],
     "require":       {
         "php":                        "^8.2",
-
         "league/flysystem":           "^3.25",
         "league/flysystem-read-only": "^3.23"
+    },
+    "require-dev":   {
+        "codeception/codeception":    "^5.1",
+        "codeception/module-asserts": "*"
     },
     "autoload":      {
         "psr-4": {

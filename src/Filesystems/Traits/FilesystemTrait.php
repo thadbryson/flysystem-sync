@@ -11,6 +11,7 @@ use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Helpers\PathHelper;
 use TCB\FlysystemSync\Paths\Contracts\Path;
 use TCB\FlysystemSync\Paths\Directory;
+use TCB\FlysystemSync\Paths\Factory;
 use TCB\FlysystemSync\Paths\File;
 
 /**
@@ -61,15 +62,19 @@ trait FilesystemTrait
             return null;
         }
 
+        // Note: need ->listContents()->toArray() to get array and not iterator.
+        //      It was causing problems unit testing.
         $contents = [];
-
-        $this->filesystem
+        $listing  = $this->filesystem
             ->listContents($path, FilesystemReader::LIST_DEEP)
-            ->map(function (StorageAttributes $found) use (&$contents): void {
-                $path = PathHelper::prepare($found->path());
+            ->toArray();
 
-                $contents[$path] = $found;
-            });
+        /** @var StorageAttributes $found */
+        foreach ($listing as $found) {
+            $path = PathHelper::prepare($found->path());
+
+            $contents[$path] = Factory::make($found);
+        }
 
         return $contents;
     }

@@ -4,26 +4,22 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Runners;
 
-use TCB\FlysystemSync\Exceptions\DirectoryNotFound;
+use TCB\FlysystemSync\Exceptions\InvalidFile;
 use TCB\FlysystemSync\Paths\Contracts\Path;
 use TCB\FlysystemSync\Paths\File;
 
 /**
  * @property-read File $source
  */
-class FileRunner extends Runner
+class FileRunner extends AbstractRunner
 {
-    protected function assertSource(?Path $source, string $path): File
+    public static function assertSource(?Path $source, string $path): File
     {
-        if ($source === null) {
-            throw new DirectoryNotFound($path);
-        }
-
         if ($source instanceof File) {
             return $source;
         }
 
-        throw new \Exception('');
+        throw new InvalidFile($path);
     }
 
     protected function create(): void

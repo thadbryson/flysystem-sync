@@ -20,10 +20,12 @@ enum Action
      */
     public static function get(Path $source, ?Path $target): self
     {
-        return match (true) {
-            $target === null                   => self::CREATE,
-            $source->isSame($target) === false => self::UPDATE,
-            default                            => self::NOTHING,
-        };
+        if ($target === null) {
+            return self::CREATE;
+        }
+
+        return $source->isChanged($target) ?
+            self::UPDATE :
+            self::NOTHING;
     }
 }
