@@ -4,17 +4,32 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
+use TCB\FlysystemSync\Paths\Contracts\Path;
 use Throwable;
 
 class Log
 {
+    public readonly string $path;
+
+    public readonly string $runner;
+
     public array $items = [];
 
     public array $exceptions = [];
 
-    public function add(string $key, mixed $value): static
+    public function __construct(string $path, string $runner)
     {
-        $this->items[$key] = $value;
+        $this->path   = $path;
+        $this->runner = $runner;
+    }
+
+    public function add(string $key, Path $source, ?Path $target): static
+    {
+        $this->items[$key] = [
+            'source'     => $source->toArray(),
+            'target'     => $target->toArray(),
+            'differencs' => $source->getDifferences($target),
+        ];
 
         return $this;
     }

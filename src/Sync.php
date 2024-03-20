@@ -37,32 +37,20 @@ class Sync
 
     public function directory(string $path): array
     {
-        $results  = [];
         $contents = $this->reader->getDirectoryContents($path) ?? throw new DirectoryNotFound($path);
 
         /** @var Path $source */
         foreach ($contents as $source) {
-            $runner = AbstractRunner::factory($this->reader, $this->writer, $source);
-
-            $results[$source->path] = [
-                'runner' => $runner,
-                'log'    => $runner->execute(),
-            ];
+            $contents[$source->path] = AbstractRunner::factory($this->reader, $this->writer, $source)->execute();
         }
 
         // Check for differences after ALL ->execute() have ran.
-        foreach ($results as $path => $current) {
-            /**
-             * @var Log            $current ['log']
-             * @var AbstractRunner $runner
-             */
-            $runner = $current['runner'];
-            $runner->loadTarget();
-
-            $results[$path] = $current['log']->add(
-                'final_differences',
-                $runner->getDifferences()
-            );
+        /**
+         * @var FileRunner|DirectoryRunner $runner
+         * @var Log                        $log
+         */
+        foreach ($contents as $path => [$runner, $log]) {
+            $contents[$path] = $log->add('final', $runner->source, $runner->loadTarget());
         }
 
         return $contents;

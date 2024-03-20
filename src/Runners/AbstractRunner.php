@@ -66,12 +66,10 @@ abstract class AbstractRunner
 
     public function execute(): Log
     {
-        $log = new Log;
+        $log = new Log($this->path, static::class);
 
         try {
-            $log->add('before_source', $this->source->toArray());
-            $log->add('before_target', $this->target->toArray());
-            $log->add('before_differences', $this->getDifferences());
+            $log->add('before', $this->source, $this->target);
 
             match ($this->action) {
                 Action::CREATE  => $this->create(),
@@ -79,9 +77,7 @@ abstract class AbstractRunner
                 Action::NOTHING => null
             };
 
-            $log->add('after_source', $this->source->toArray());
-            $log->add('after_target', $this->target->toArray());
-            $log->add('after_differences', $this->getDifferences());
+            $log->add('after', $this->source, $this->target);
         }
         catch (Throwable $exception) {
             $log->addException($exception);
