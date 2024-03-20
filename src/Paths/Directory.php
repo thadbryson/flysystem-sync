@@ -6,9 +6,12 @@ namespace TCB\FlysystemSync\Paths;
 
 use TCB\FlysystemSync\Helpers\PathHelper;
 use TCB\FlysystemSync\Paths\Contracts\Path;
+use TCB\FlysystemSync\Paths\Traits\PathTrait;
 
 readonly class Directory implements Path
 {
+    use PathTrait;
+
     public string $path;
 
     public function __construct(
@@ -19,31 +22,13 @@ readonly class Directory implements Path
         $this->path = PathHelper::prepare($path);
     }
 
-    public function isChanged(?Path $target): bool
-    {
-        return
-            $target === null ||
-            $this->isFile() !== $target->isFile() ||
-            $this->isDirectory() !== $target->isDirectory() ||
-            $this->visibility !== $target->visibility;
-    }
-
     public function toArray(): array
     {
         return [
             'path'         => $this->path,
+            'type'         => static::class,
             'visibility'   => $this->visibility,
             'lastModified' => $this->lastModified,
         ];
-    }
-
-    public function isFile(): false
-    {
-        return false;
-    }
-
-    public function isDirectory(): true
-    {
-        return true;
     }
 }

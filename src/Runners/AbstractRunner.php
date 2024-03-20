@@ -4,12 +4,13 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Runners;
 
-use League\Flysystem\FilesystemAdapter;
 use TCB\FlysystemSync\Action;
 use TCB\FlysystemSync\Exceptions\SourceNotFound;
 use TCB\FlysystemSync\Filesystems\Reader;
 use TCB\FlysystemSync\Filesystems\Writer;
+use TCB\FlysystemSync\Log;
 use TCB\FlysystemSync\Paths\Contracts\Path;
+use Throwable;
 
 abstract class AbstractRunner
 {
@@ -19,39 +20,39 @@ abstract class AbstractRunner
 
     public readonly string $path;
 
-    public readonly Action $action;
-
     public readonly Path $source;
 
-    public function __construct(FilesystemAdapter $reader, FilesystemAdapter $writer, Path $source)
+    public readonly Path $target;
+
+    public readonly Action $action;
+
+    public function __construct(Reader $reader, Writer $writer, Path $source)
     {
+        $this->reader = $reader;
+        $this->writer = $writer;
+
         $this->path = $source->path;
 
-        $this->reader = new Reader($reader);
-        $this->writer = new Writer($writer);
-
+        $source       = $this->reader->getPath($this->path);
         $this->source = static::assertSource($source, $this->path);
-        $this->action = Action::get($this->source, $this->getTarget());
+
+        $this->loadTarget();
+        $this->action = Action::get($this->source, $this->target);
     }
 
-    public static function fromPath(FilesystemAdapter $reader, FilesystemAdapter $writer, string $path): static
+    public static function fromPath(Reader $reader, Writer $writer, string $path): static
     {
-        $filesystem = new Reader($reader);
-
         // Get either File or Directory.
         // Then ->assertSource() will throw an Exception if it's not File or Directory.
         // Can't have a getSource() because return type can't be overriden.
-        $source = $filesystem->getPath($path) ?? throw new SourceNotFound($path);
+        $source = $reader->getPath($path) ?? throw new SourceNotFound($path);
         $source = static::assertSource($source, $path);
 
         return new static($reader, $writer, $source);
     }
 
-    public static function factory(
-        FilesystemAdapter $reader,
-        FilesystemAdapter $writer,
-        Path $source
-    ): FileRunner|DirectoryRunner {
+    public static function factory(Reader $reader, Writer $writer, Path $source): FileRunner|DirectoryRunner
+    {
         return $source->isFile() ?
             new FileRunner($reader, $writer, $source) :
             new DirectoryRunner($reader, $writer, $source);
@@ -63,22 +64,41 @@ abstract class AbstractRunner
 
     abstract protected function update(): void;
 
-    public function execute(): bool
+    public function execute(): Log
     {
-        match ($this->action) {
-            Action::CREATE  => $this->create(),
-            Action::UPDATE  => $this->update(),
-            Action::NOTHING => null
-        };
+        $log = new Log;
+
+        try {
+            $log->add('before_source', $this->source->toArray());
+            $log->add('before_target', $this->target->toArray());
+            $log->add('before_differences', $this->getDifferences());
+
+            match ($this->action) {
+                Action::CREATE  => $this->create(),
+                Action::UPDATE  => $this->update(),
+                Action::NOTHING => null
+            };
+
+            $log->add('after_source', $this->source->toArray());
+            $log->add('after_target', $this->target->toArray());
+            $log->add('after_differences', $this->getDifferences());
+        }
+        catch (Throwable $exception) {
+            $log->addException($exception);
+        }
+
+        return $log;
     }
 
-    public function isSame(): bool
+    public function getDifferences(): array
     {
-        return $this->source->isChanged($this->getTarget()) === false;
+        return $this->source->getDifferences($this->target);
     }
 
-    protected function getTarget(): ?Path
+    public function loadTarget(): ?Path
     {
-        return $this->writer->getPath($this->path);
+        $this->target = $this->writer->getPath($this->path);
+
+        return $this->target;
     }
 }

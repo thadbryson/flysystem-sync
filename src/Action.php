@@ -24,7 +24,7 @@ enum Action
             return self::CREATE;
         }
 
-        return $source->isChanged($target) ?
+        return $source->getDifferences($target) !== [] ?
             self::UPDATE :
             self::NOTHING;
     }

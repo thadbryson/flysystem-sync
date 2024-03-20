@@ -7,6 +7,7 @@ namespace TCB\FlysystemSync;
 use League\Flysystem\FilesystemAdapter;
 use TCB\FlysystemSync\Exceptions\DirectoryNotFound;
 use TCB\FlysystemSync\Filesystems\Reader;
+use TCB\FlysystemSync\Filesystems\Writer;
 use TCB\FlysystemSync\Paths\Contracts\Path;
 use TCB\FlysystemSync\Runners\AbstractRunner;
 use TCB\FlysystemSync\Runners\DirectoryRunner;
@@ -14,45 +15,56 @@ use TCB\FlysystemSync\Runners\FileRunner;
 
 class Sync
 {
-    public function __construct(
-        protected readonly FilesystemAdapter $reader,
-        protected readonly FilesystemAdapter $writer
-    ) {
+    protected readonly Reader $reader;
+
+    protected readonly Writer $writer;
+
+    public function __construct(FilesystemAdapter $reader, FilesystemAdapter $writer)
+    {
+        $this->reader = new Reader($reader);
+        $this->writer = new Writer($writer);
     }
 
-    public function file(string $path): bool
+    public function file(string $path): Log
     {
-        return FileRunner::fromPath($this->reader, $this->writer, $path)
-            ->execute();
+        return FileRunner::fromPath($this->reader, $this->writer, $path)->execute();
+    }
+
+    public function directoryOnly(string $path): Log
+    {
+        return DirectoryRunner::fromPath($this->reader, $this->writer, $path)->execute();
     }
 
     public function directory(string $path): array
     {
-        $contents = (new Reader($this->reader))->getDirectoryContents($path) ?? throw new DirectoryNotFound($path);
+        $results  = [];
+        $contents = $this->reader->getDirectoryContents($path) ?? throw new DirectoryNotFound($path);
 
         /** @var Path $source */
-        foreach ($contents as $path => $source) {
+        foreach ($contents as $source) {
             $runner = AbstractRunner::factory($this->reader, $this->writer, $source);
 
-            $contents[$path] = [
-                'path'    => $path,
-                'runner'  => $runner,
-                'source'  => $source->toArray(),
-                'execute' => $runner->execute(),
+            $results[$source->path] = [
+                'runner' => $runner,
+                'log'    => $runner->execute(),
             ];
         }
 
         // Check for differences after ALL ->execute() have ran.
-        foreach ($contents as $path => $result) {
-            $contents[$path]['final'] = $result['runner']->isSame();
+        foreach ($results as $path => $current) {
+            /**
+             * @var Log            $current ['log']
+             * @var AbstractRunner $runner
+             */
+            $runner = $current['runner'];
+            $runner->loadTarget();
+
+            $results[$path] = $current['log']->add(
+                'final_differences',
+                $runner->getDifferences()
+            );
         }
 
         return $contents;
-    }
-
-    public function directoryOnly(string $path): bool
-    {
-        return DirectoryRunner::fromPath($this->reader, $this->writer, $path)
-            ->execute();
     }
 }
