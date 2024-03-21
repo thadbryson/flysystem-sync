@@ -4,61 +4,47 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Runners;
 
-use TCB\FlysystemSync\Helpers\ActionEnum;
 use TCB\FlysystemSync\Exceptions\SourceNotFound;
 use TCB\FlysystemSync\Filesystems\Reader;
 use TCB\FlysystemSync\Filesystems\Writer;
+use TCB\FlysystemSync\Helpers\ActionEnum;
 use TCB\FlysystemSync\Log;
 use TCB\FlysystemSync\Paths\Contracts\Path;
 use Throwable;
 
 abstract class AbstractRunner
 {
-    public readonly Reader $reader;
+    public readonly Log $log;
 
-    public readonly Writer $writer;
+    public function __construct(
+        public readonly Reader $reader,
+        public readonly Writer $writer,
+        public readonly Path $source,
+        public readonly Path $target
+    ) {
+        static::assertSource($source);
 
-    public readonly string $path;
-
-    public readonly Path $source;
-
-    public readonly Path $target;
-
-    public readonly ActionEnum $action;
-
-    public function __construct(Reader $reader, Writer $writer, Path $source)
-    {
-        $this->reader = $reader;
-        $this->writer = $writer;
-
-        $this->path = $source->path;
-
-        $source       = $this->reader->getPath($this->path);
-        $this->source = static::assertSource($source, $this->path);
-
-        $this->loadTarget();
-        $this->action = ActionEnum::get($this->source, $this->target);
+        $this->log = new Log($this->source, $this->target, static::class);
     }
 
-    public static function fromPath(Reader $reader, Writer $writer, string $path): static
-    {
+    public static function fromPath(
+        Reader $reader,
+        Writer $writer,
+        string $source,
+        ?string $target
+    ): static {
+        $target = $target ?? $source;
+
         // Get either File or Directory.
         // Then ->assertSource() will throw an Exception if it's not File or Directory.
         // Can't have a getSource() because return type can't be overriden.
-        $source = $reader->getPath($path) ?? throw new SourceNotFound($path);
-        $source = static::assertSource($source, $path);
+        $source = $reader->getPath($source) ?? throw new SourceNotFound($source);
+        $target = $writer->getPath($target) ?? $source->withPath($target);
 
-        return new static($reader, $writer, $source);
+        return new static($reader, $writer, $source, $target);
     }
 
-    public static function factory(Reader $reader, Writer $writer, Path $source): FileRunner|DirectoryRunner
-    {
-        return $source->isFile() ?
-            new FileRunner($reader, $writer, $source) :
-            new DirectoryRunner($reader, $writer, $source);
-    }
-
-    abstract public static function assertSource(Path $source, string $path): Path;
+    abstract protected static function assertSource(Path $source): Path;
 
     abstract protected function create(): void;
 
@@ -66,24 +52,20 @@ abstract class AbstractRunner
 
     public function execute(): Log
     {
-        $log = new Log($this->path, static::class);
-
         try {
-            $log->before($this->source, $this->target);
-
-            match ($this->action) {
+            match ($this->log->action) {
                 ActionEnum::CREATE  => $this->create(),
                 ActionEnum::UPDATE  => $this->update(),
                 ActionEnum::NOTHING => null
             };
 
-            $log->after($this->source, $this->target);
+            $this->log->add(Log::STAGE_AFTER, $this->source, $this->loadTarget());
         }
         catch (Throwable $exception) {
-            $log->exception = $exception;
+            $this->log->exception = $exception;
         }
 
-        return $log;
+        return $this->log;
     }
 
     public function getDifferences(): array
@@ -93,8 +75,6 @@ abstract class AbstractRunner
 
     public function loadTarget(): ?Path
     {
-        $this->target = $this->writer->getPath($this->path);
-
-        return $this->target;
+        return $this->writer->getPath($this->target->path);
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Paths\Traits;
 
+use League\Flysystem\FileAttributes;
+use League\Flysystem\StorageAttributes;
 use TCB\FlysystemSync\Paths\Contracts\Path;
 use TCB\FlysystemSync\Paths\Directory;
 use TCB\FlysystemSync\Paths\File;
@@ -36,6 +38,7 @@ trait PathTrait
             $target->toArray()
         );
 
+        unset($diffs['path']);
         unset($diffs['lastModified']);
 
         return $diffs;

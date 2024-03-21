@@ -25,34 +25,49 @@ class Sync
         $this->writer = new Writer($writer);
     }
 
-    public function file(string $path): Log
+    public function file(string $source, string $target = null): Log
     {
-        return FileRunner::fromPath($this->reader, $this->writer, $path)->execute();
+        return FileRunner::fromPath($this->reader, $this->writer, $source, $target)->execute();
     }
 
-    public function directoryOnly(string $path): Log
+    public function directoryOnly(string $source, string $target = null): Log
     {
-        return DirectoryRunner::fromPath($this->reader, $this->writer, $path)->execute();
+        return DirectoryRunner::fromPath($this->reader, $this->writer, $source, $target)->execute();
     }
 
-    public function directory(string $path): array
+    public function directory(string $source, string $target = null): array
     {
-        $contents = $this->reader->getDirectoryContents($path) ?? throw new DirectoryNotFound($path);
+        $logs = [];
 
-        /** @var Path $source */
-        foreach ($contents as $source) {
-            $contents[$source->path] = AbstractRunner::factory($this->reader, $this->writer, $source)->execute();
+        $sources = $this->reader->getDirectoryContents($source) ?? throw new DirectoryNotFound($source);
+        $targets = $this->writer->getDirectoryContents($target) ?? throw new DirectoryNotFound($target);
+
+        /**
+         * @var Path      $source
+         * @var Path|null $target
+         */
+        foreach ($sources as $path => $source) {
+            $target = $targets[$path] ?? null;
+
+            $runner = $source->isFile() ?
+                new FileRunner($this->reader, $this->writer, $source, $target) :
+                new DirectoryRunner($this->reader, $this->writer, $source, $target);
+
+            $logs[$path] = [
+                $runner,
+                $runner->execute(),
+            ];
         }
 
         // Check for differences after ALL ->execute() have ran.
         /**
-         * @var FileRunner|DirectoryRunner $runner
-         * @var Log                        $log
+         * @var AbstractRunner $runner
+         * @var Log            $log
          */
-        foreach ($contents as $path => [$runner, $log]) {
-            $contents[$path] = $log->final($runner->source, $runner->loadTarget());
+        foreach ($logs as $path => [$runner, $log]) {
+            $logs[$path] = $log->add(Log::STAGE_FINAL, $runner->source, $runner->loadTarget());
         }
 
-        return $contents;
+        return $logs;
     }
 }

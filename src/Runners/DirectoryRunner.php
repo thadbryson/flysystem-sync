@@ -13,25 +13,25 @@ use TCB\FlysystemSync\Paths\Directory;
  */
 class DirectoryRunner extends AbstractRunner
 {
-    public static function assertSource(Path $source, string $path): Directory
+    protected static function assertSource(Path $source): Directory
     {
         if ($source instanceof Directory) {
             return $source;
         }
 
-        throw new InvalidDirectory($path);
+        throw new InvalidDirectory($source->path);
     }
 
     protected function create(): void
     {
-        $this->writer->filesystem->createDirectory($this->path);
+        $this->writer->filesystem->createDirectory($this->target->path);
     }
 
     protected function update(): void
     {
         $this->writer->filesystem->setVisibility(
-            $this->path,
-            $this->source->visibility
+            $this->target->path,
+            $this->target->visibility
         );
     }
 }

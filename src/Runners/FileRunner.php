@@ -13,13 +13,13 @@ use TCB\FlysystemSync\Paths\File;
  */
 class FileRunner extends AbstractRunner
 {
-    public static function assertSource(?Path $source, string $path): File
+    protected static function assertSource(Path $source): File
     {
         if ($source instanceof File) {
             return $source;
         }
 
-        throw new InvalidFile($path);
+        throw new InvalidFile($source->path);
     }
 
     protected function create(): void
@@ -30,8 +30,8 @@ class FileRunner extends AbstractRunner
     protected function update(): void
     {
         $this->writer->filesystem->writeStream(
-            $this->path,
-            $this->reader->readStream($this->path)
+            $this->target->path,
+            $this->reader->readStream($this->source->path)
         );
     }
 }

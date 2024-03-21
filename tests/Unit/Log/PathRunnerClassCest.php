@@ -15,12 +15,12 @@ class PathRunnerClassCest
     {
         $file = new Log('home/thad/README.md', FileRunner::class);
 
-        $I->assertEquals('home/thad/README.md', $file->path);
+        $I->assertEquals('home/thad/README.md', $file->source);
         $I->assertEquals(FileRunner::class, $file->runner);
 
         $directory = new Log('home/thad/Music', DirectoryRunner::class);
 
-        $I->assertEquals('home/thad/Music', $directory->path);
+        $I->assertEquals('home/thad/Music', $directory->source);
         $I->assertEquals(DirectoryRunner::class, $directory->runner);
     }
 }
