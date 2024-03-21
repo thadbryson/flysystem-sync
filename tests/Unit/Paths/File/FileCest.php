@@ -30,6 +30,7 @@ class FileCest
 
         $I->assertEquals([
             'path'         => 'home/is/where/THE/heart/IS',
+            'type'         => File::class,
             'visibility'   => 'public',
             'lastModified' => 100_000_000,
             'fileSize'     => 5_000,

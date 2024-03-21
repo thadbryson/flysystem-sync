@@ -4,11 +4,11 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync;
 
-namespace TCB\FlysystemSync;
+namespace TCB\FlysystemSync\Helpers;
 
 use TCB\FlysystemSync\Paths\Contracts\Path;
 
-enum Action
+enum ActionEnum
 {
     case CREATE;
     case UPDATE;

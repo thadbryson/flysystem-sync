@@ -26,6 +26,7 @@ class DirectoryCest
 
         $I->assertEquals([
             'path'         => 'directory/is/here',
+            'type'         => Directory::class,
             'visibility'   => 'thadbry',
             'lastModified' => 7_500_000,
         ], $directory->toArray());

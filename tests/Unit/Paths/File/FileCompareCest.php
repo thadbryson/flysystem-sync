@@ -24,18 +24,19 @@ class FileCompareCest
 
     public function whenTargetIsNullTrue(UnitTester $I): void
     {
-        $is_changed = $this->file->isChanged(null);
+        $diffs = $this->file->getDifferences(null);
 
-        $I->assertTrue($is_changed, 'When TARGET is NULL, always CHANGED');
+        $I->assertEquals($this->file->toArray(), $diffs, 'When TARGET is NULL, always CHANGED');
     }
 
     public function whenTargetTypeIsDifferentTrue(UnitTester $I): void
     {
-        $is_changed = $this->file->isChanged(
-            new Directory('path', 'public', 1_000)
-        );
+        $diffs = $this->file->getDifferences(new Directory('path', 'public', 1_000));
 
-        $I->assertTrue($is_changed, 'When TARGET is different, always CHANGED');
+        $I->assertEquals([
+            'path' => $this->file->path,
+            'type' => $this->file::class,
+        ], $diffs, 'When TARGET is different, always CHANGED');
     }
 
     public function whenExactlySamePaths(UnitTester $I): void
@@ -43,7 +44,7 @@ class FileCompareCest
         $file1 = $this->makeBasic();
         $file2 = $this->makeBasic();
 
-        $I->assertFalse($file1->isChanged($file2));
+        $I->assertFalse($file1->getDifferences($file2) !== []);
     }
 
     public function hasDifferentVisibility(UnitTester $I): void
@@ -63,12 +64,14 @@ class FileCompareCest
         ] as $visibility) {
             $compare = new File('path', $visibility, 1_000, 1_000_000, 'application/json');
 
-            $I->assertTrue($this->file->isChanged($compare));
+            $I->assertEquals([
+                'visibility' => $this->file->visibility,
+            ], $this->file->getDifferences($compare));
         }
     }
 
     /**
-     * Only visibility changes ->isChanged())
+     * Only visibility changes ->getDifferences())
      */
     public function lastModifiedBeforeSource(UnitTester $I): void
     {
@@ -82,7 +85,7 @@ class FileCompareCest
         ] as $before_source) {
             $compare = new File('path', 'public', $before_source, 1_000_000, 'application/json');
 
-            $I->assertTrue($this->file->isChanged($compare));
+            $I->assertEquals([], $this->file->getDifferences($compare));
         }
     }
 
@@ -97,7 +100,7 @@ class FileCompareCest
         ] as $before_source) {
             $compare = new File('path', 'public', $before_source, 1_000_000, 'application/json');
 
-            $I->assertFalse($this->file->isChanged($compare));
+            $I->assertEquals([], $this->file->getDifferences($compare));
         }
     }
 
@@ -110,7 +113,9 @@ class FileCompareCest
         ] as $filesize) {
             $compare = new File('path', 'public', 1_000, $filesize, 'application/json');
 
-            $I->assertTrue($this->file->isChanged($compare));
+            $I->assertEquals([
+                'fileSize' => $this->file->fileSize,
+            ], $this->file->getDifferences($compare));
         }
     }
 
@@ -126,7 +131,9 @@ class FileCompareCest
         ] as $mimeType) {
             $compare = new File('path', 'public', 1_000, 1_000_000, $mimeType);
 
-            $I->assertTrue($this->file->isChanged($compare));
+            $I->assertEquals([
+                'mimeType' => $this->file->mimeType,
+            ], $this->file->getDifferences($compare));
         }
     }
 }

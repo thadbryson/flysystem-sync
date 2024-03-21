@@ -24,16 +24,16 @@ class DirectoryCompareCest
 
     public function whenTargetIsNullTrue(UnitTester $I): void
     {
-        $is_changed = $this->directory->isChanged(null);
+        $is_changed = $this->directory->getDifferences(null) !== [];
 
         $I->assertTrue($is_changed, 'When TARGET is NULL, always CHANGED');
     }
 
     public function whenTargetTypeIsDifferentTrue(UnitTester $I): void
     {
-        $is_changed = $this->directory->isChanged(
+        $is_changed = $this->directory->getDifferences(
             new File('path', 'public', 1_000, 1, 'json')
-        );
+        ) !== [];
 
         $I->assertTrue($is_changed, 'When TARGET is different, always CHANGED');
     }
@@ -43,7 +43,7 @@ class DirectoryCompareCest
         $directory1 = $this->makeBasic();
         $directory2 = $this->makeBasic();
 
-        $I->assertFalse($directory1->isChanged($directory2));
+        $I->assertFalse($directory1->getDifferences($directory2) !== []);
     }
 
     public function hasDifferentVisibility(UnitTester $I): void
@@ -63,12 +63,12 @@ class DirectoryCompareCest
         ] as $visibility) {
             $compare = new Directory('path', $visibility, 1_000);
 
-            $I->assertTrue($this->directory->isChanged($compare));
+            $I->assertTrue($this->directory->getDifferences($compare) !== []);
         }
     }
 
     /**
-     * Only visibility changes ->isChanged())
+     * Only visibility changes ->getDifferences())
      */
     public function lastModifiedBeforeSource(UnitTester $I): void
     {
@@ -82,7 +82,7 @@ class DirectoryCompareCest
         ] as $before_source) {
             $compare = new Directory('path', 'public', $before_source);
 
-            $I->assertFalse($this->directory->isChanged($compare));
+            $I->assertFalse($this->directory->getDifferences($compare) !== []);
         }
     }
 
@@ -97,7 +97,7 @@ class DirectoryCompareCest
         ] as $before_source) {
             $compare = new Directory('path', 'public', $before_source);
 
-            $I->assertFalse($this->directory->isChanged($compare));
+            $I->assertFalse($this->directory->getDifferences($compare) !== []);
         }
     }
 }

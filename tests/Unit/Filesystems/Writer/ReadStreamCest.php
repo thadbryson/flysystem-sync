@@ -14,7 +14,7 @@ class ReadStreamCest
 
     public function readStream(UnitTester $I): void
     {
-        $I->expectThrowable(new Exception(''), function () {
+        $I->expectThrowable(new Exception('Method not allowed on class TCB\FlysystemSync\Filesystems\Writer - readStream()'), function () {
             $this->sync_filesystem->readStream('home/user.txt');
         });
     }

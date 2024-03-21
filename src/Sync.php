@@ -50,7 +50,7 @@ class Sync
          * @var Log                        $log
          */
         foreach ($contents as $path => [$runner, $log]) {
-            $contents[$path] = $log->add('final', $runner->source, $runner->loadTarget());
+            $contents[$path] = $log->final($runner->source, $runner->loadTarget());
         }
 
         return $contents;

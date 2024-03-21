@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace TCB\FlysystemSync\Runners;
 
-use TCB\FlysystemSync\Action;
+use TCB\FlysystemSync\Helpers\ActionEnum;
 use TCB\FlysystemSync\Exceptions\SourceNotFound;
 use TCB\FlysystemSync\Filesystems\Reader;
 use TCB\FlysystemSync\Filesystems\Writer;
@@ -24,7 +24,7 @@ abstract class AbstractRunner
 
     public readonly Path $target;
 
-    public readonly Action $action;
+    public readonly ActionEnum $action;
 
     public function __construct(Reader $reader, Writer $writer, Path $source)
     {
@@ -37,7 +37,7 @@ abstract class AbstractRunner
         $this->source = static::assertSource($source, $this->path);
 
         $this->loadTarget();
-        $this->action = Action::get($this->source, $this->target);
+        $this->action = ActionEnum::get($this->source, $this->target);
     }
 
     public static function fromPath(Reader $reader, Writer $writer, string $path): static
@@ -69,18 +69,18 @@ abstract class AbstractRunner
         $log = new Log($this->path, static::class);
 
         try {
-            $log->add('before', $this->source, $this->target);
+            $log->before($this->source, $this->target);
 
             match ($this->action) {
-                Action::CREATE  => $this->create(),
-                Action::UPDATE  => $this->update(),
-                Action::NOTHING => null
+                ActionEnum::CREATE  => $this->create(),
+                ActionEnum::UPDATE  => $this->update(),
+                ActionEnum::NOTHING => null
             };
 
-            $log->add('after', $this->source, $this->target);
+            $log->after($this->source, $this->target);
         }
         catch (Throwable $exception) {
-            $log->addException($exception);
+            $log->exception = $exception;
         }
 
         return $log;
