@@ -15,19 +15,19 @@ final class SyncTest extends TestCase
     {
         $this->sync->syncWrites();
 
-        $this->assertTrue(is_dir($this->output . '/slave/create-dir'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/1.json'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/1.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/2.yml'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/3.php'));
-        $this->assertTrue(is_dir($this->output . '/slave/delete-dir'));
-        $this->assertTrue(is_dir($this->output . '/slave/delete-dir/delete-three'));
-        $this->assertTrue(is_file($this->output . '/slave/delete-dir/delete-three/huh.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/delete-dir/me1.txt'));
-        $this->assertTrue(is_dir($this->output . '/slave/folder1'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/delete.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/master.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/on-both.txt'));
+        $this->assertTrue(is_dir($this->output . '/target/create-dir'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/1.json'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/1.txt'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/2.yml'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/3.php'));
+        $this->assertTrue(is_dir($this->output . '/target/delete-dir'));
+        $this->assertTrue(is_dir($this->output . '/target/delete-dir/delete-three'));
+        $this->assertTrue(is_file($this->output . '/target/delete-dir/delete-three/huh.txt'));
+        $this->assertTrue(is_file($this->output . '/target/delete-dir/me1.txt'));
+        $this->assertTrue(is_dir($this->output . '/target/folder1'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/delete.txt'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/source.txt'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/on-both.txt'));
     }
 
     /**
@@ -37,20 +37,20 @@ final class SyncTest extends TestCase
     {
         $this->sync->syncDeletes();
 
-        $this->assertFalse(is_dir($this->output . '/slave/create-dir'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/1.json'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/1.txt'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/2.yml'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/3.php'));
-        $this->assertFalse(is_dir($this->output . '/slave/delete-dir'));
-        $this->assertFalse(is_dir($this->output . '/slave/delete-dir/delete-three'));
-        $this->assertFalse(is_file($this->output . '/slave/delete-dir/delete-three/huh.txt'));
-        $this->assertFalse(is_dir($this->output . '/slave/delete-dir/delete-too'));
-        $this->assertFalse(is_file($this->output . '/slave/delete-dir/me1.txt'));
-        $this->assertTrue(is_dir($this->output . '/slave/folder1'));
-        $this->assertFalse(is_file($this->output . '/slave/folder1/delete.txt'));
-        $this->assertFalse(is_file($this->output . '/slave/folder1/master.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/on-both.txt'));
+        $this->assertFalse(is_dir($this->output . '/target/create-dir'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/1.json'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/1.txt'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/2.yml'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/3.php'));
+        $this->assertFalse(is_dir($this->output . '/target/delete-dir'));
+        $this->assertFalse(is_dir($this->output . '/target/delete-dir/delete-three'));
+        $this->assertFalse(is_file($this->output . '/target/delete-dir/delete-three/huh.txt'));
+        $this->assertFalse(is_dir($this->output . '/target/delete-dir/delete-too'));
+        $this->assertFalse(is_file($this->output . '/target/delete-dir/me1.txt'));
+        $this->assertTrue(is_dir($this->output . '/target/folder1'));
+        $this->assertFalse(is_file($this->output . '/target/folder1/delete.txt'));
+        $this->assertFalse(is_file($this->output . '/target/folder1/source.txt'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/on-both.txt'));
     }
 
     /**
@@ -60,19 +60,19 @@ final class SyncTest extends TestCase
     {
         $this->sync->syncUpdates();
 
-        $this->assertFalse(is_dir($this->output . '/slave/create-dir'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/1.json'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/1.txt'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/2.yml'));
-        $this->assertFalse(is_file($this->output . '/slave/create-dir/3.php'));
-        $this->assertTrue(is_dir($this->output . '/slave/delete-dir'));
-        $this->assertTrue(is_dir($this->output . '/slave/delete-dir/delete-three'));
-        $this->assertTrue(is_file($this->output . '/slave/delete-dir/delete-three/huh.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/delete-dir/me1.txt'));
-        $this->assertTrue(is_dir($this->output . '/slave/folder1'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/delete.txt'));
-        $this->assertFalse(is_file($this->output . '/slave/folder1/master.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/on-both.txt'));
+        $this->assertFalse(is_dir($this->output . '/target/create-dir'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/1.json'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/1.txt'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/2.yml'));
+        $this->assertFalse(is_file($this->output . '/target/create-dir/3.php'));
+        $this->assertTrue(is_dir($this->output . '/target/delete-dir'));
+        $this->assertTrue(is_dir($this->output . '/target/delete-dir/delete-three'));
+        $this->assertTrue(is_file($this->output . '/target/delete-dir/delete-three/huh.txt'));
+        $this->assertTrue(is_file($this->output . '/target/delete-dir/me1.txt'));
+        $this->assertTrue(is_dir($this->output . '/target/folder1'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/delete.txt'));
+        $this->assertFalse(is_file($this->output . '/target/folder1/source.txt'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/on-both.txt'));
     }
 
     /**
@@ -82,19 +82,19 @@ final class SyncTest extends TestCase
     {
         $this->sync->sync();
 
-        $this->assertTrue(is_dir($this->output . '/slave/create-dir'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/1.json'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/1.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/2.yml'));
-        $this->assertTrue(is_file($this->output . '/slave/create-dir/3.php'));
-        $this->assertFalse(is_dir($this->output . '/slave/delete-dir'));
-        $this->assertFalse(is_dir($this->output . '/slave/delete-dir/delete-three'));
-        $this->assertFalse(is_file($this->output . '/slave/delete-dir/delete-three/huh.txt'));
-        $this->assertFalse(is_dir($this->output . '/slave/delete-dir/delete-too'));
-        $this->assertFalse(is_file($this->output . '/slave/delete-dir/me1.txt'));
-        $this->assertTrue(is_dir($this->output . '/slave/folder1'));
-        $this->assertFalse(is_file($this->output . '/slave/folder1/delete.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/master.txt'));
-        $this->assertTrue(is_file($this->output . '/slave/folder1/on-both.txt'));
+        $this->assertTrue(is_dir($this->output . '/target/create-dir'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/1.json'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/1.txt'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/2.yml'));
+        $this->assertTrue(is_file($this->output . '/target/create-dir/3.php'));
+        $this->assertFalse(is_dir($this->output . '/target/delete-dir'));
+        $this->assertFalse(is_dir($this->output . '/target/delete-dir/delete-three'));
+        $this->assertFalse(is_file($this->output . '/target/delete-dir/delete-three/huh.txt'));
+        $this->assertFalse(is_dir($this->output . '/target/delete-dir/delete-too'));
+        $this->assertFalse(is_file($this->output . '/target/delete-dir/me1.txt'));
+        $this->assertTrue(is_dir($this->output . '/target/folder1'));
+        $this->assertFalse(is_file($this->output . '/target/folder1/delete.txt'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/source.txt'));
+        $this->assertTrue(is_file($this->output . '/target/folder1/on-both.txt'));
     }
 }

@@ -31,10 +31,10 @@ trait TestTrait
 
         $this->copyDir(__DIR__ . '/sync-test-seed', __DIR__ . '/sync-test-seed', $this->output);
 
-        $master = new Filesystem(new Adapter(__DIR__ . '/sync-test/master'));
-        $slave  = new Filesystem(new Adapter(__DIR__ . '/sync-test/slave'));
+        $source = new Filesystem(new Adapter(__DIR__ . '/sync-test/source'));
+        $target  = new Filesystem(new Adapter(__DIR__ . '/sync-test/target'));
 
-        $this->sync = new Sync($master, $slave);
+        $this->sync = new Sync($source, $target);
     }
 
     /**

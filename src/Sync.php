@@ -1,104 +1,58 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace TCB\FlysystemSync;
 
+use Illuminate\Support\Collection;
 use League\Flysystem\Filesystem;
-use League\Flysystem\StorageAttributes;
 
 class Sync
 {
     /**
-     * Master filesystem.
-     *
-     * @var Filesystem
-     */
-    protected $master;
-
-    /**
-     * Slave filesystem.
-     *
-     * @var Filesystem
-     */
-    protected $slave;
-
-    /**
-     * Configuration for Adapter.
-     *
-     * @var array
-     */
-    protected $config;
-
-    /**
      * Util object for getting WRITE, UPDATE, and DELETE paths.
-     *
-     * @var Util
      */
-    protected $util;
+    protected readonly ContentBag $bag;
 
-    public function __construct(Filesystem $master, Filesystem $slave, array $config = [], string $directory = '/')
+    public function __construct(
+        public readonly Filesystem $source,
+        public readonly Filesystem $target,
+        public readonly array $config = [],
+        string $directory = '/')
     {
-        $this->master = $master;
-        $this->slave  = $slave;
-
-        $this->config = $config;
-
-        $this->util = new Util($master, $slave, $directory);
+        $this->bag = new ContentBag($source, $target, $directory);
     }
 
     /**
-     * Get Util helper object used for getting WRITE, UPDATE, and DELETE paths.
+     * Sync any creates.
      */
-    public function getUtil(): Util
+    public function syncCreates(): static
     {
-        return $this->util;
-    }
-
-    /**
-     * Sync any writes.
-     *
-     * @return $this
-     */
-    public function syncWrites(): Sync
-    {
-        foreach ($this->util->getWrites() as $path) {
-            $this->put($path);
-        }
-
-        return $this;
+        return $this->put($this->bag->creates);
     }
 
     /**
      * Sync any updates.
-     *
-     * @return $this
      */
-    public function syncUpdates(): Sync
+    public function syncUpdates(): static
     {
-        foreach ($this->util->getUpdates() as $path) {
-            $this->put($path);
-        }
-
-        return $this;
+        return $this->put($this->bag->updates);
     }
 
     /**
      * Sync any deletes.
-     *
-     * @return $this
      */
-    public function syncDeletes(): Sync
+    public function syncDeletes(): static
     {
-        foreach ($this->util->getDeletes() as $path) {
+        foreach ($this->bag->deletes as $path) {
 
-            // A dir delete may of deleted this path already.
+            // A directory delete may of deleted this path already.
             if ($path->isFile()) {
-                $this->slave->delete($path->path());
+                $this->target->delete($path->path());
             }
-            // A dir? They're deleted a special way.
+            // A directory? They're deleted a special way.
             elseif ($path->isDir()) {
-                $this->slave->deleteDirectory($path->path());
+                $this->target->deleteDirectory($path->path());
             }
         }
 
@@ -106,32 +60,40 @@ class Sync
     }
 
     /**
-     * Call $this->syncWrites(), $this->syncUpdates(), and $this->syncDeletes()
+     * Call $this->syncCreates(), $this->syncUpdates(), and $this->syncDeletes()
      *
      * @return $this
      */
-    public function sync(): Sync
+    public function sync(): static
     {
         return $this
-            ->syncWrites()
+            ->syncCreates()
             ->syncUpdates()
             ->syncDeletes();
     }
 
     /**
-     * Call ->put() on $slave. Update/Write content from $master. Also sets visibility on slave.
+     * Call ->put() on $slave. Update/Create content from $target. Also sets visibility on slave.
      */
-    protected function put(StorageAttributes $path): void
+    protected function put(Collection $collection): static
     {
-        // Otherwise create or update the file.
-        if ($path->isFile()) {
-            $contents = $this->master->readStream($path->path());
+        $collection->each(function (Action $action): void {
 
-            $this->slave->writeStream($path->path(), $contents, $this->config);
-        }
-        // A dir? Create it.
-        elseif ($path->isDir()) {
-            $this->slave->createDirectory($path->path(), $this->config);
-        }
+            // Otherwise create or update the file.
+            if ($action->source->isFile()) {
+                $contents = $this->source->readStream($action->path);
+
+                $this->target->createStream($action->path, $contents, $this->config);
+            }
+            // A directory? Create it.
+            elseif ($action->source->isDir()) {
+                $this->target->createDirectory($action->path, $this->config);
+            }
+            else {
+                throw new \RuntimeException('StorageAttributes must be either a "file" or "directory"');
+            }
+        });
+
+        return $this;
     }
 }
