@@ -6,21 +6,29 @@ namespace TCB\FlysystemSync;
 
 use Illuminate\Support\Collection;
 use League\Flysystem\Filesystem;
+use TCB\FlysystemSync\Action\Action;
+use TCB\FlysystemSync\Directory\Actions;
 
+/**
+ * @todo Add config [] for createDirectory() and writeStream()
+ */
 class Sync
 {
     /**
      * Util object for getting WRITE, UPDATE, and DELETE paths.
      */
-    protected readonly ContentBag $bag;
+    public readonly Actions $bag;
 
+    /**
+     * @throws \League\Flysystem\FilesystemException
+     */
     public function __construct(
-        public readonly Filesystem $source,
-        public readonly Filesystem $target,
-        public readonly array $config = [],
-        string $directory = '/')
+        public readonly Filesystem $sources,
+        public readonly Filesystem $targets,
+        string $directory = '/'
+    )
     {
-        $this->bag = new ContentBag($source, $target, $directory);
+        $this->bag = new Actions($sources, $targets, $directory);
     }
 
     /**
@@ -28,15 +36,7 @@ class Sync
      */
     public function syncCreates(): static
     {
-        return $this->put($this->bag->creates);
-    }
-
-    /**
-     * Sync any updates.
-     */
-    public function syncUpdates(): static
-    {
-        return $this->put($this->bag->updates);
+//        return $this->put($this->bag->creates_directories);
     }
 
     /**
@@ -44,55 +44,56 @@ class Sync
      */
     public function syncDeletes(): static
     {
-        foreach ($this->bag->deletes as $path) {
-
-            // A directory delete may of deleted this path already.
-            if ($path->isFile()) {
-                $this->target->delete($path->path());
-            }
-            // A directory? They're deleted a special way.
-            elseif ($path->isDir()) {
-                $this->target->deleteDirectory($path->path());
-            }
-        }
+        /** @var Action $action */
+//        foreach ($this->bag->deletes as $action) {
+//
+//            $action->is_file ?
+//                $this->targets->delete($action->path) :
+//                $this->targets->deleteDirectory($action->path);
+//        }
 
         return $this;
     }
 
     /**
+     * Sync any updates.
+     */
+    public function syncUpdates(): static
+    {
+//        return $this->put($this->bag->updates);
+    }
+
+    /**
      * Call $this->syncCreates(), $this->syncUpdates(), and $this->syncDeletes()
-     *
-     * @return $this
      */
     public function sync(): static
     {
         return $this
+            ->syncDeletes()
             ->syncCreates()
-            ->syncUpdates()
-            ->syncDeletes();
+            ->syncUpdates();
     }
 
     /**
-     * Call ->put() on $slave. Update/Create content from $target. Also sets visibility on slave.
+     * CREATE or UPDATE a FILE or DIRECTORY
      */
     protected function put(Collection $collection): static
     {
-        $collection->each(function (Action $action): void {
+        /** @var Action $action */
+        foreach ($collection as $action) {
 
-            // Otherwise create or update the file.
-            if ($action->source->isFile()) {
-                $contents = $this->source->readStream($action->path);
+            // FILE
+            $action->is_file ?
 
-                $this->target->createStream($action->path, $contents, $this->config);
-            }
-            // A directory? Create it.
-            elseif ($action->source->isDir()) {
-                $this->target->createDirectory($action->path, $this->config);
-            }
-            else {
-                throw new \RuntimeException('StorageAttributes must be either a "file" or "directory"');
-            }
-        });
+                $this->targets->writeStream(
+                    $action->path,
+                    // Maybe save memory by not assigning to another var?
+                    $this->sources->readStream($action->path)
+                ) :
+
+                // DIRECTORY
+                $this->targets->createDirectory($action->path);
+        }
 
         return $this;
     }

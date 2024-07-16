@@ -32,10 +32,7 @@ Here is some example code to set everything up.
 
 ```php
 
-use TCB\FlysystemSync\Sync;
-
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter as Adapter;
+use League\Flysystem\Filesystem;use League\Flysystem\Local\LocalFilesystemAdapter as Adapter;use TCB\FlysystemSync\Sync;
 
 // Setup file system.
 $source = new Filesystem(new Adapter(__DIR__ . '/sync-test/source'));
